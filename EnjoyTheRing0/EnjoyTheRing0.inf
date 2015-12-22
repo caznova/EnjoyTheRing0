@@ -1,0 +1,32 @@
+;
+; EnjoyTheRing0.inf
+;
+
+[Version]
+Signature="$WINDOWS NT$"
+Class=
+ClassGuid="{6E7820B0-5143-4994-8A55-CD88DF2EEC63}"
+Provider="Froggy Style Inc. Kernel Development"
+DriverVer=
+CatalogFile=EnjoyTheRing0.cat
+
+[DestinationDirs]
+DefaultDestDir = 12
+
+
+[SourceDisksNames]
+1 = %DiskName%,,,""
+
+[SourceDisksFiles]
+
+
+[Manufacturer]
+%ManufacturerName%=Standard,NT$ARCH$
+
+[Standard.NT$ARCH$]
+
+
+[Strings]
+ManufacturerName=""
+ClassName=""
+DiskName="EnjoyTheRing0 Source Disk"
