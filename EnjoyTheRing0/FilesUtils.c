@@ -93,7 +93,7 @@ NTSTATUS AppendFile(OUT PHANDLE hFile, LPWSTR FilePath, BOOL CreateIfNotExists) 
 		FULL_SHARED_ACCESS,
 		CreateIfNotExists ? FILE_OPEN_IF : FILE_OPEN,
 		FILE_NON_DIRECTORY_FILE | FILE_SYNCHRONOUS_IO_NONALERT
-		);
+	);
 }
 
 NTSTATUS CreateDirectory(LPWSTR DirPath) {
