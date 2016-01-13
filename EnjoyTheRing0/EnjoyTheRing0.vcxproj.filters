@@ -53,5 +53,8 @@
     <ClInclude Include="FilesUtils.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="ProcessesUtils.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

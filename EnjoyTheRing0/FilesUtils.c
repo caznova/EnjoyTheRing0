@@ -1,10 +1,7 @@
 #include <ntifs.h>
-#include <windef.h>
-#include "FilesUtils.h"
 #include "MemoryUtils.h"
 #include "StringsUtils.h"
-
-
+#include "FilesUtils.h"
 
 SIZE_T __inline GetNtPath(LPWSTR Path, OUT LPWSTR* NtPath) {
 	return ConcatenateStringsW(L"\\??\\", Path, NtPath);

@@ -1,7 +1,8 @@
-#include <wdm.h>
-#include "Main.h"
-#include "FilesUtils.h"
+#include "ProcessesUtils.h"
+#include "MemoryUtils.h"
 #include "StringsUtils.h"
+#include "FilesUtils.h"
+#include "Main.h"
 
 UNICODE_STRING DeviceName;
 UNICODE_STRING DeviceLink;
@@ -12,7 +13,7 @@ NTSTATUS DriverEntry(IN PDRIVER_OBJECT DriverObject, IN PUNICODE_STRING Registry
 	PDEVICE_OBJECT DeviceObject;
 
 	NTSTATUS Status = 0;
-
+	
 	DbgPrint("[ETR0]: Loading...");
 
 	// Назначаем события:
@@ -73,36 +74,43 @@ NTSTATUS DriverControl(IN PDEVICE_OBJECT DeviceObject, IN PIRP IORequestPacket)
 
 	// Обрабатываем IRP:
 	__try {
-		// *** Пример работы со строками, файлами и папками ***
+		// Получаем PID во входном буфере:
+		HANDLE ProcessId = (HANDLE)(*((PULONG)InputBuffer));
+		DbgPrint("ProcessID = %d", ProcessId);
 
-		LPWSTR DirectoryPath    = L"C:\\[ETR0] Directory\\";
-		LPWSTR OriginalFileName = L"KernelFile.txt";
-		
-		// Формируем полный путь к файлу:
-		LPWSTR OriginalFilePath;
-		ConcatenateStringsW(DirectoryPath, OriginalFileName, &OriginalFilePath);
+		// Открываем процесс:
+		HANDLE hProcess;
+		OpenProcess(ProcessId, &hProcess);
 
-		// Создаём рабочую папку:
-		CreateDirectory(DirectoryPath);
+		// Выделяем память в нужном процессе:
+		const SIZE_T BufferSize = 1048576 * 300; // Выделим 300 мегабайт
+		PVOID VirtualAddress;
+		if NT_SUCCESS(VirtualAlloc(hProcess, BufferSize, &VirtualAddress)) {
+			DbgPrint("[ETR0]: Allocation successful!");
+			DbgPrint("VirtualAddress = 0x%X", VirtualAddress);
 
-		// Создаём файл и записываем в него строку:
-		HANDLE hFile;
-		LPSTR  Text = "Hello, Kernel-World!";
-		CreateEmptyFile(&hFile, OriginalFilePath);
-		WriteFile(hFile, Text, (ULONG)LengthA(Text), NULL, NULL);
-		CloseFile(hFile);
-			
-		// Освобождаем память, занятую под путь к файлу:
-		FreeString(OriginalFilePath);
+			// Переключаемся на адресное пространство процесса и пишем в выделенную память:
+			KAPC_STATE ApcState;
+			SwitchToSpecifiedProcessAddressSpace(ProcessId, &ApcState);
+			FillChar(VirtualAddress, BufferSize, (UCHAR)0x00);
+			DetachFromSpecifiedProcessAddressSpace(&ApcState);
 
-
-
-		// *** Обработка IOCTL ***
-
-		// Обрабатываем нужный IOCTL, если требуется:
-		switch (ControlCode) {
-			// ...
+			// Освобождаем память:
+			VirtualFree(hProcess, VirtualAddress);
 		}
+
+		// Модифицируем произвольную память:
+		VirtualAddress = (PVOID)0x11223344; // Виртуальный адрес в контексте нужного процесса
+		KAPC_STATE ApcState;
+		SwitchToSpecifiedProcessAddressSpace(ProcessId, &ApcState); // Переключаемся в контекст нужного процесса
+		PHYSICAL_ADDRESS PhysicalAddress = GetPhysicalAddress(VirtualAddress); // Получаем физ. адрес из виртуального
+		PULONG MappedMemory = MapPhysicalMemoryWithProtect(PhysicalAddress, sizeof(ULONG), PAGE_EXECUTE_READWRITE);
+		*MappedMemory = 12345; // Меняем память на нужное нам значение
+		UnmapPhysicalMemory(MappedMemory, sizeof(ULONG)); // Размапливаем память
+		DetachFromSpecifiedProcessAddressSpace(&ApcState); // Выходим из контекста процесса обратно
+
+		// Закрываем процесс:
+		CloseProcess(hProcess);
 
 	} __except (EXCEPTION_EXECUTE_HANDLER) {
 		DbgPrint("[ETR0]: Exception catched!");
