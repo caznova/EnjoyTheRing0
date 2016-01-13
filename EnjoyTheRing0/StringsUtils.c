@@ -1,47 +1,38 @@
-#include <wdm.h>
-#include <ntstrsafe.h>
-#include <windef.h>
 #include "MemoryUtils.h"
 #include "StringsUtils.h"
 
-VOID __inline ValidateMaxBufferSize(SIZE_T* pMaxBufferSize) {
+VOID __forceinline ValidateMaxBufferSize(SIZE_T* pMaxBufferSize) {
 	if (*pMaxBufferSize > NTSTRSAFE_MAX_CCH) *pMaxBufferSize = NTSTRSAFE_MAX_CCH;
 }
 
-BOOL SafeStrCatA(LPSTR Dest, SIZE_T DestMaxCharacters, LPSTR ConcatenateWith) {
+NTSTATUS SafeStrCatA(LPSTR Dest, SIZE_T DestMaxCharacters, LPSTR ConcatenateWith) {
 	ValidateMaxBufferSize(&DestMaxCharacters);
-	NTSTATUS Status = RtlStringCchCatA(Dest, DestMaxCharacters, ConcatenateWith);
-	return NT_SUCCESS(Status);
+	return RtlStringCchCatA(Dest, DestMaxCharacters, ConcatenateWith);
 }
 
-BOOL SafeStrCatW(LPWSTR Dest, SIZE_T DestMaxCharacters, LPWSTR ConcatenateWith) {
+NTSTATUS SafeStrCatW(LPWSTR Dest, SIZE_T DestMaxCharacters, LPWSTR ConcatenateWith) {
 	ValidateMaxBufferSize(&DestMaxCharacters);
-	NTSTATUS Status = RtlStringCchCatW(Dest, DestMaxCharacters, ConcatenateWith);
-	return NT_SUCCESS(Status);
+	return RtlStringCchCatW(Dest, DestMaxCharacters, ConcatenateWith);
 }
 
-BOOL SafeStrCpyA(LPSTR Dest, SIZE_T DestMaxCharacters, LPSTR Source) {
+NTSTATUS SafeStrCpyA(LPSTR Dest, SIZE_T DestMaxCharacters, LPSTR Source) {
 	ValidateMaxBufferSize(&DestMaxCharacters);
-	NTSTATUS Status = RtlStringCchCopyA(Dest, DestMaxCharacters, Source);
-	return NT_SUCCESS(Status);
+	return RtlStringCchCopyA(Dest, DestMaxCharacters, Source);
 }
 
-BOOL SafeStrCpyW(LPWSTR Dest, SIZE_T DestMaxCharacters, LPWSTR Source) {
+NTSTATUS SafeStrCpyW(LPWSTR Dest, SIZE_T DestMaxCharacters, LPWSTR Source) {
 	ValidateMaxBufferSize(&DestMaxCharacters);
-	NTSTATUS Status = RtlStringCchCopyW(Dest, DestMaxCharacters, Source);
-	return NT_SUCCESS(Status);
+	return RtlStringCchCopyW(Dest, DestMaxCharacters, Source);
 }
 
-BOOL SafeStrLenA(LPSTR Str, SIZE_T DestMaxCharacters, PSIZE_T Length) {
-	ValidateMaxBufferSize(&DestMaxCharacters);
-	NTSTATUS Status = RtlStringCchLengthA(Str, DestMaxCharacters, Length);
-	return NT_SUCCESS(Status);
+NTSTATUS SafeStrLenA(LPSTR String, SIZE_T MaxCharacters, PSIZE_T Length) {
+	ValidateMaxBufferSize(&MaxCharacters);
+	return RtlStringCchLengthA(String, MaxCharacters, Length);
 }
 
-BOOL SafeStrLenW(LPWSTR Str, SIZE_T DestMaxCharacters, PSIZE_T Length) {
-	ValidateMaxBufferSize(&DestMaxCharacters);
-	NTSTATUS Status = RtlStringCchLengthW(Str, DestMaxCharacters, Length);
-	return NT_SUCCESS(Status);
+NTSTATUS SafeStrLenW(LPWSTR String, SIZE_T MaxCharacters, PSIZE_T Length) {
+	ValidateMaxBufferSize(&MaxCharacters);
+	return RtlStringCchLengthW(String, MaxCharacters, Length);
 }
 
 SIZE_T LengthA(LPSTR Str) {
@@ -56,7 +47,7 @@ SIZE_T LengthW(LPWSTR Str) {
 	return Length;
 }
 
-VOID WideToAnsi(LPWSTR SrcWide, LPSTR DestAnsi) {
+VOID WideToAnsi(LPWSTR SrcWide, OUT LPSTR DestAnsi) {
 	SIZE_T WideLength = 0;
 	SafeStrLenW(SrcWide, NTSTRSAFE_MAX_CCH, &WideLength);
 

@@ -1,22 +1,26 @@
 #pragma once
 
 #include <ntstrsafe.h>
+#include <windef.h>
 
 #define MAX_CHARS NTSTRSAFE_MAX_CCH // Можно указывать в DestMaxCharacters
 
-BOOL SafeStrCatA(LPSTR  Dest, SIZE_T DestMaxCharacters, LPSTR  ConcatenateWith);
-BOOL SafeStrCatW(LPWSTR Dest, SIZE_T DestMaxCharacters, LPWSTR ConcatenateWith);
+// DestMaxCharacters и MaxCharacters - размер буфера в СИМВОЛАХ с учётом символа для нуль-терминатора
 
-BOOL SafeStrCpyA(LPSTR  Dest, SIZE_T DestMaxCharacters, LPSTR  Source);
-BOOL SafeStrCpyW(LPWSTR Dest, SIZE_T DestMaxCharacters, LPWSTR Source);
+NTSTATUS SafeStrCatA(LPSTR  Dest, SIZE_T DestMaxCharacters, LPSTR  ConcatenateWith);
+NTSTATUS SafeStrCatW(LPWSTR Dest, SIZE_T DestMaxCharacters, LPWSTR ConcatenateWith);
 
-BOOL SafeStrLenA(LPSTR  Str, SIZE_T DestMaxCharacters, PSIZE_T Length);
-BOOL SafeStrLenW(LPWSTR Str, SIZE_T DestMaxCharacters, PSIZE_T Length);
+NTSTATUS SafeStrCpyA(LPSTR  Dest, SIZE_T DestMaxCharacters, LPSTR  Source);
+NTSTATUS SafeStrCpyW(LPWSTR Dest, SIZE_T DestMaxCharacters, LPWSTR Source);
 
+NTSTATUS SafeStrLenA(LPSTR  String, SIZE_T MaxCharacters, PSIZE_T Length);
+NTSTATUS SafeStrLenW(LPWSTR String, SIZE_T MaxCharacters, PSIZE_T Length);
+
+// Длина строки в символах без нуль-терминатора:
 SIZE_T LengthA(LPSTR  Str);
 SIZE_T LengthW(LPWSTR Str);
 
-VOID WideToAnsi(LPWSTR SrcWide, LPSTR DestAnsi);
+VOID WideToAnsi(LPWSTR SrcWide, OUT LPSTR DestAnsi);
 
 VOID DbgPrintW(LPWSTR DebugString);
 
