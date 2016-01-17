@@ -1,7 +1,10 @@
-#include "ProcessesUtils.h"
+// KernelAPI by HoShiMin - include 'em all!
 #include "MemoryUtils.h"
 #include "StringsUtils.h"
 #include "FilesUtils.h"
+#include "ProcessesUtils.h"
+#include "RegistryUtils.h"
+
 #include "Main.h"
 
 UNICODE_STRING DeviceName;
@@ -14,7 +17,7 @@ NTSTATUS DriverEntry(IN PDRIVER_OBJECT DriverObject, IN PUNICODE_STRING Registry
 
 	NTSTATUS Status = 0;
 	
-	DbgPrint("[ETR0]: Loading...");
+	DbgPrint("[ETR0]: Loading...\r\n");
 
 	// Назначаем события:
 	DriverObject->DriverUnload = DriverUnload;
@@ -28,7 +31,7 @@ NTSTATUS DriverEntry(IN PDRIVER_OBJECT DriverObject, IN PUNICODE_STRING Registry
 	Status = IoCreateDevice(DriverObject, 0, &DeviceName, FILE_DEVICE_UNKNOWN, 0, FALSE, &DeviceObject);
 
 	if (!NT_SUCCESS(Status)) {
-		DbgPrint("[ETR0]: IoCreateDevice Error!");
+		DbgPrint("[ETR0]: IoCreateDevice Error!\r\n");
 		return Status;
 	}
 
@@ -37,14 +40,15 @@ NTSTATUS DriverEntry(IN PDRIVER_OBJECT DriverObject, IN PUNICODE_STRING Registry
 	Status = IoCreateSymbolicLink(&DeviceLink, &DeviceName);
 
 	if (!NT_SUCCESS(Status)) {
-		DbgPrint("[ETR0]: IoCreateSymbolicLink Error!");
+		DbgPrint("[ETR0]: IoCreateSymbolicLink Error!\r\n");
 		IoDeleteDevice(DeviceObject);
 		return Status;
 	}
 
-	DbgPrint("[ETR0]: Successfully loaded!");
+	DbgPrint("[ETR0]: Successfully loaded!\r\n");
 	return STATUS_SUCCESS;
 }
+
 
 // Событие обработки IOCTL:
 NTSTATUS DriverControl(IN PDEVICE_OBJECT DeviceObject, IN PIRP IORequestPacket)
@@ -74,46 +78,24 @@ NTSTATUS DriverControl(IN PDEVICE_OBJECT DeviceObject, IN PIRP IORequestPacket)
 
 	// Обрабатываем IRP:
 	__try {
-		// Получаем PID во входном буфере:
-		HANDLE ProcessId = (HANDLE)(*((PULONG)InputBuffer));
-		DbgPrint("ProcessID = %d", ProcessId);
 
-		// Открываем процесс:
-		HANDLE hProcess;
-		OpenProcess(ProcessId, &hProcess);
+		HANDLE hKey;
+		NTSTATUS Status = CreateKey(HKEY_CURRENT_USER, L"Software\\EnjoyTheRing0\\", &hKey);
 
-		// Выделяем память в нужном процессе:
-		const SIZE_T BufferSize = 1048576 * 300; // Выделим 300 мегабайт
-		PVOID VirtualAddress;
-		if NT_SUCCESS(VirtualAlloc(hProcess, BufferSize, &VirtualAddress)) {
-			DbgPrint("[ETR0]: Allocation successful!");
-			DbgPrint("VirtualAddress = 0x%X", VirtualAddress);
+		if NT_SUCCESS(Status) {
+			SetKeyDword(hKey, L"DWORD value", 0x11223344);
+			SetKeyString(hKey, L"String value", L"PWNED!");
 
-			// Переключаемся на адресное пространство процесса и пишем в выделенную память:
-			KAPC_STATE ApcState;
-			SwitchToSpecifiedProcessAddressSpace(ProcessId, &ApcState);
-			FillChar(VirtualAddress, BufferSize, (UCHAR)0x00);
-			DetachFromSpecifiedProcessAddressSpace(&ApcState);
-
-			// Освобождаем память:
-			VirtualFree(hProcess, VirtualAddress);
+			LPWSTR StringValue = NULL;
+			GetKeyStringWithAlloc(hKey, L"String value", &StringValue, NULL);
+			DbgPrintW(StringValue);
+			if (StringValue != NULL) FreeString(StringValue);
+			
+			CloseKey(hKey);
 		}
-
-		// Модифицируем произвольную память:
-		VirtualAddress = (PVOID)0x11223344; // Виртуальный адрес в контексте нужного процесса
-		KAPC_STATE ApcState;
-		SwitchToSpecifiedProcessAddressSpace(ProcessId, &ApcState); // Переключаемся в контекст нужного процесса
-		PHYSICAL_ADDRESS PhysicalAddress = GetPhysicalAddress(VirtualAddress); // Получаем физ. адрес из виртуального
-		PULONG MappedMemory = MapPhysicalMemoryWithProtect(PhysicalAddress, sizeof(ULONG), PAGE_EXECUTE_READWRITE);
-		*MappedMemory = 12345; // Меняем память на нужное нам значение
-		UnmapPhysicalMemory(MappedMemory, sizeof(ULONG)); // Размапливаем память
-		DetachFromSpecifiedProcessAddressSpace(&ApcState); // Выходим из контекста процесса обратно
-
-		// Закрываем процесс:
-		CloseProcess(hProcess);
-
+		
 	} __except (EXCEPTION_EXECUTE_HANDLER) {
-		DbgPrint("[ETR0]: Exception catched!");
+		DbgPrint("[ETR0]: Exception catched!\r\n");
 	}
 
 	// Завершение запроса:
@@ -127,7 +109,7 @@ NTSTATUS DriverControl(IN PDEVICE_OBJECT DeviceObject, IN PIRP IORequestPacket)
 // Событие создания драйвера (открытия устройства через CreateFile):
 NTSTATUS DriverCreate(IN PDEVICE_OBJECT DeviceObject, IN PIRP IORequestPacket)
 {
-	DbgPrint("[ETR0]: DriverCreate event!");
+	DbgPrint("[ETR0]: DriverCreate event!\r\n");
 	IORequestPacket->IoStatus.Status = STATUS_SUCCESS;
 	IORequestPacket->IoStatus.Information = 0;
 	IoCompleteRequest(IORequestPacket, IO_NO_INCREMENT);
@@ -137,7 +119,7 @@ NTSTATUS DriverCreate(IN PDEVICE_OBJECT DeviceObject, IN PIRP IORequestPacket)
 // Событие очистки ресурсов драйвера:
 NTSTATUS DriverCleanup(IN PDEVICE_OBJECT DeviceObject, IN PIRP IORequestPacket)
 {
-	DbgPrint("[ETR0]: DriverCleanup event!");
+	DbgPrint("[ETR0]: DriverCleanup event!\r\n");
 	IORequestPacket->IoStatus.Status = STATUS_SUCCESS;
 	IORequestPacket->IoStatus.Information = 0;
 	IoCompleteRequest(IORequestPacket, IO_NO_INCREMENT);
@@ -147,7 +129,7 @@ NTSTATUS DriverCleanup(IN PDEVICE_OBJECT DeviceObject, IN PIRP IORequestPacket)
 // Событие закрытия драйвера (закрытия устройства через CloseHandle):
 NTSTATUS DriverClose(IN PDEVICE_OBJECT DeviceObject, IN PIRP IORequestPacket)
 {
-	DbgPrint("[ETR0]: DriverClose event!");
+	DbgPrint("[ETR0]: DriverClose event!\r\n");
 	IORequestPacket->IoStatus.Status = STATUS_SUCCESS;
 	IORequestPacket->IoStatus.Information = 0;
 	IoCompleteRequest(IORequestPacket, IO_NO_INCREMENT);
@@ -157,11 +139,11 @@ NTSTATUS DriverClose(IN PDEVICE_OBJECT DeviceObject, IN PIRP IORequestPacket)
 // Выгрузка драйвера:
 VOID DriverUnload(IN PDRIVER_OBJECT DriverObject)
 {
-	DbgPrint("[ETR0]: Unloading...");
+	DbgPrint("[ETR0]: Unloading...\r\n");
 
 	IoDeleteSymbolicLink(&DeviceLink);
 	IoDeleteDevice(DriverObject->DeviceObject);
 
-	DbgPrint("[ETR0]: Successfully unloaded!");
+	DbgPrint("[ETR0]: Successfully unloaded!\r\n");
 	return;
 }

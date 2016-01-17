@@ -6,7 +6,6 @@
 #pragma once
 
 #include <wdm.h>
-#include <windef.h>
 
 PCWSTR DeviceNameStr = L"\\Device\\EnjoyTheRing0";
 PCWSTR DeviceLinkStr = L"\\??\\EnjoyTheRing0";
