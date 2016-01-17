@@ -1,6 +1,7 @@
 #pragma once
 
-#include <windef.h>
+#include "MemoryUtils.h"
+#include "StringsUtils.h"
 
 // Сокращённые флаги доступа:
 #define FULL_ACCESS         GENERIC_ALL
@@ -47,7 +48,7 @@ BOOL FileObjectExists(LPWSTR Path, BOOL IsDirectory);
 BOOL FileExists      (LPWSTR FilePath);
 BOOL DirectoryExists (LPWSTR DirectoryPath);
 
-SIZE_T GetFileSize(LPWSTR FilePath);
+LONGLONG GetFileSize(LPWSTR FilePath);
 
 // Чтение и запись в файлы, в CreateOptions нужно дополнительно передать FILE_SYNCHRONOUS_IO_NONALERT:
 NTSTATUS ReadFile (HANDLE hFile, PVOID Buffer, ULONG Size, IN OPTIONAL PLARGE_INTEGER Offset, OUT OPTIONAL PULONG BytesRead);

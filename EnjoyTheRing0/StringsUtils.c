@@ -1,4 +1,5 @@
-#include "MemoryUtils.h"
+#include <ntstatus.h>
+#include <ntstrsafe.h>
 #include "StringsUtils.h"
 
 VOID __forceinline ValidateMaxBufferSize(SIZE_T* pMaxBufferSize) {
@@ -53,7 +54,7 @@ VOID WideToAnsi(LPWSTR SrcWide, OUT LPSTR DestAnsi) {
 
 	if (WideLength == 0) return;
 
-	for (int i = 0; i < WideLength; i++) {
+	for (ULONG i = 0; i < WideLength; i++) {
 		*((PBYTE)DestAnsi + i) = *((PBYTE)(SrcWide) + (i * 2));
 	}
 	*((PBYTE)DestAnsi + WideLength) = 0; // Нуль-терминатор

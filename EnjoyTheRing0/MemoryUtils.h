@@ -1,6 +1,8 @@
 #pragma once
 
+#include <ntifs.h>
 #include <ntddk.h>
+#include <ntdef.h>
 #include <windef.h>
 
 // Выделение и освобождение виртуальной NonPaged-памяти из пула:
@@ -20,15 +22,18 @@ PVOID AllocCacheablePhysicalMemory(PHYSICAL_ADDRESS PhysicalAddress, SIZE_T Numb
 VOID  FreePhysicalMemory(PVOID BaseAddress);
 
 /* Работа с физической памятью:
-     GetPhysicalAddress           - получить физический адрес виртуальной памяти в контексте текущего процесса
-	 MapPhysicalMemory            - отобразить физическую память на виртуальную с настройкой кэширования
-	 MapPhysicalMemoryWithProtect - отобразить физическую память на виртуальную с настройкой прав доступа
-	 UnmapPhysicalMemory          - размапить физическую память
+	GetPhysicalAddress           - получить физический адрес виртуальной памяти в контексте текущего процесса
+	MapPhysicalMemory            - отобразить физическую память на виртуальную с настройкой кэширования
+	MapPhysicalMemoryWithProtect - отобразить физическую память на виртуальную с настройкой прав доступа
+	UnmapPhysicalMemory          - размапить физическую память
 */
 PHYSICAL_ADDRESS GetPhysicalAddress          (PVOID BaseVirtualAddress);
 PVOID            MapPhysicalMemory           (PHYSICAL_ADDRESS PhysicalAddress, SIZE_T NumberOfBytes, MEMORY_CACHING_TYPE CachingType);
 PVOID            MapPhysicalMemoryWithProtect(PHYSICAL_ADDRESS PhysicalAddress, SIZE_T NumberOfBytes, ULONG Protect);
 VOID             UnmapPhysicalMemory         (PVOID BaseVirtualAddress, SIZE_T NumberOfBytes);
+
+// Чтение DMI - структуры SMBIOS:
+BOOL ReadDmiMemory(PVOID Buffer, SIZE_T BufferSize);
 
 // "Защитить" память от урезания прав доступа или освобождения (ProbeMode - самый "ограничительный" приемлемый режим):
 VOID SecureVirtualMemory(PVOID VirtualAddress, SIZE_T NumberOfBytes, ULONG ProbeMode, OUT PHANDLE SecureHandle);

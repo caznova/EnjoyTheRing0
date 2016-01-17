@@ -1,6 +1,3 @@
-#include <ntifs.h>
-#include "MemoryUtils.h"
-#include "StringsUtils.h"
 #include "FilesUtils.h"
 
 SIZE_T __inline GetNtPath(LPWSTR Path, OUT LPWSTR* NtPath) {
@@ -134,7 +131,7 @@ BOOL DirectoryExists(LPWSTR DirectoryPath) {
 
 
 
-SIZE_T GetFileSize(LPWSTR FilePath) {
+LONGLONG GetFileSize(LPWSTR FilePath) {
 	HANDLE hFile;
 	NTSTATUS CreationStatus = CreateFile(&hFile, FilePath, SYNCHRONIZE, FILE_ATTRIBUTE_NORMAL, FULL_SHARED_ACCESS, FILE_OPEN, FILE_NON_DIRECTORY_FILE);
 	if (!SUCCESS_FILE_OPERATION(CreationStatus, hFile)) return 0;

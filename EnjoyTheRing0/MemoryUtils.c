@@ -60,6 +60,21 @@ VOID UnmapPhysicalMemory(PVOID BaseVirtualAddress, SIZE_T NumberOfBytes) {
 	MmUnmapIoSpace(BaseVirtualAddress, NumberOfBytes);
 }
 
+BOOL ReadDmiMemory(PVOID Buffer, SIZE_T BufferSize) {
+	const SIZE_T DmiMemorySize = 65536;
+	if (BufferSize < DmiMemorySize) return FALSE;
+
+	PHYSICAL_ADDRESS DmiAddress;
+	DmiAddress.QuadPart = 0xF0000;
+	PVOID DmiMemory = MapPhysicalMemory(DmiAddress, DmiMemorySize, MmNonCached);
+	BOOL Status = DmiMemory != NULL;
+	if (Status) {
+		RtlCopyMemory(Buffer, DmiMemory, DmiMemorySize);
+		UnmapPhysicalMemory(DmiMemory, DmiMemorySize);
+	}
+	return Status;
+}
+
 VOID SecureVirtualMemory(PVOID VirtualAddress, SIZE_T NumberOfBytes, ULONG ProbeMode, OUT PHANDLE SecureHandle) {
 	*SecureHandle = MmSecureVirtualMemory(VirtualAddress, NumberOfBytes, ProbeMode);
 }

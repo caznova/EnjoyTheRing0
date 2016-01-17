@@ -1,9 +1,8 @@
 #pragma once
 
-#include <ntstrsafe.h>
-#include <windef.h>
+#include "MemoryUtils.h"
 
-#define MAX_CHARS NTSTRSAFE_MAX_CCH // Можно указывать в DestMaxCharacters
+#define MAX_CHARS 2147483647 // Можно указывать в DestMaxCharacters
 
 // DestMaxCharacters и MaxCharacters - размер буфера в СИМВОЛАХ с учётом символа для нуль-терминатора
 
@@ -24,7 +23,8 @@ VOID WideToAnsi(LPWSTR SrcWide, OUT LPSTR DestAnsi);
 
 VOID DbgPrintW(LPWSTR DebugString);
 
-// Выделение памяти и конкатенация строк. Память необходимо освобождать с помощью FreeString:
+// Выделение памяти и конкатенация строк, возвращает количество символов в итоговой строке БЕЗ нуль-терминатора;
+// память необходимо освобождать с помощью FreeString:
 SIZE_T ConcatenateStringsA(LPSTR  SrcString, LPSTR  ConcatenateWith, OUT LPSTR*  ResultString);
 SIZE_T ConcatenateStringsW(LPWSTR SrcString, LPWSTR ConcatenateWith, OUT LPWSTR* ResultString);
 
