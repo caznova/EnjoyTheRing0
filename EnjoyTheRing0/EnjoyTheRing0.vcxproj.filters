@@ -39,6 +39,12 @@
     <ClCompile Include="StringsUtils.c">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="RegistryUtils.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="CallbacksDemo.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Main.h">
@@ -54,6 +60,12 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="ProcessesUtils.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="RegistryUtils.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="CallbacksDemo.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

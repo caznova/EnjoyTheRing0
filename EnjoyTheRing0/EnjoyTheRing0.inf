@@ -3,11 +3,11 @@
 ;
 
 [Version]
-Signature="$WINDOWS NT$"
-Class=
-ClassGuid="{6E7820B0-5143-4994-8A55-CD88DF2EEC63}"
-Provider="Froggy Style Inc. Kernel Development"
-DriverVer=
+Signature=$WINDOWS NT$
+Class=General purpose
+ClassGuid={711725DC-8765-476F-A269-8CA1D3209127}
+Provider=Froggy Style Inc. Kernel Development
+DriverVer=01/01/2016,0.01.0000.0
 CatalogFile=EnjoyTheRing0.cat
 
 [DestinationDirs]
@@ -27,6 +27,6 @@ DefaultDestDir = 12
 
 
 [Strings]
-ManufacturerName=""
-ClassName=""
+ManufacturerName="Froggy Style Inc. Kernel Dept."
+ClassName="General purpose driver"
 DiskName="EnjoyTheRing0 Source Disk"
