@@ -11,7 +11,6 @@ LPWSTR GetFullKeyPath(LPWSTR Root, LPWSTR KeyPath) {
 NTSTATUS CreateKey(LPWSTR Root, LPWSTR KeyPath, OUT PHANDLE hKey) {
 	
 	LPWSTR FullKeyPath = GetFullKeyPath(Root, KeyPath);
-	DbgPrintW(FullKeyPath);
 
 	UNICODE_STRING UnicodePath;
 	RtlInitUnicodeString(&UnicodePath, FullKeyPath);
@@ -73,6 +72,10 @@ NTSTATUS SetKeyString(HANDLE hKey, LPWSTR ValueName, LPWSTR String) {
 	return SetKeyValue(hKey, ValueName, REG_SZ, String, (ULONG)LengthW(String) * sizeof(WCHAR) + sizeof(WCHAR));
 }
 
+NTSTATUS SetKeyExpandString(HANDLE hKey, LPWSTR ValueName, LPWSTR String) {
+	return SetKeyValue(hKey, ValueName, REG_EXPAND_SZ, String, (ULONG)LengthW(String) * sizeof(WCHAR) + sizeof(WCHAR));
+}
+
 
 
 NTSTATUS GetKeyValue(HANDLE hKey, LPWSTR ValueName, PVOID OutputBuffer, ULONG BufferSize, OUT OPTIONAL PULONG BytesReturned) {
@@ -98,7 +101,7 @@ NTSTATUS GetKeyValue(HANDLE hKey, LPWSTR ValueName, PVOID OutputBuffer, ULONG Bu
 	return Status;
 }
 
-NTSTATUS GetKeyWord(HANDLE hKey, LPWSTR ValueName, OUT PDWORD Value) {
+NTSTATUS GetKeyDword(HANDLE hKey, LPWSTR ValueName, OUT PDWORD Value) {
 	return GetKeyValue(hKey, ValueName, Value, sizeof(DWORD), NULL);
 }
 

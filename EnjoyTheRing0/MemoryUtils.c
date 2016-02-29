@@ -8,7 +8,7 @@ PVOID GetMem(SIZE_T Bytes) {
 }
 
 VOID FreeMem(PVOID Pointer) {
-	ExFreePool(Pointer);
+	if (Pointer) ExFreePool(Pointer);
 }
 
 LPWSTR AllocWideString(SIZE_T MaxCharactersCount, BOOL AddNullTerminator, OUT OPTIONAL SIZE_T* AllocatedCharacters) {
@@ -24,7 +24,7 @@ LPSTR AllocAnsiString(SIZE_T MaxCharactersCount, BOOL AddNullTerminator, OUT OPT
 }
 
 VOID FillChar(PVOID Buffer, SIZE_T BufferSize, UCHAR Char) {
-	RtlFillMemory(Buffer, BufferSize, Char);
+	if (Buffer && BufferSize) RtlFillMemory(Buffer, BufferSize, Char);
 }
 
 PVOID AllocPhysicalMemory(PHYSICAL_ADDRESS PhysicalAddress, SIZE_T NumberOfBytes) {
@@ -45,6 +45,11 @@ VOID FreePhysicalMemory(PVOID BaseAddress) {
 }
 
 PHYSICAL_ADDRESS GetPhysicalAddress(PVOID BaseVirtualAddress) {
+	if (!IsAddressValid(BaseVirtualAddress)) {
+		PHYSICAL_ADDRESS PhysicalAddress;
+		PhysicalAddress.QuadPart = 0;
+		return PhysicalAddress;
+	}
 	return MmGetPhysicalAddress(BaseVirtualAddress);
 }
 
@@ -52,8 +57,28 @@ PVOID MapPhysicalMemory(PHYSICAL_ADDRESS PhysicalAddress, SIZE_T NumberOfBytes, 
 	return MmMapIoSpace(PhysicalAddress, NumberOfBytes, CachingType);
 }
 
+#ifdef ENABLE_WIN10_EXTENSIONS
 PVOID MapPhysicalMemoryWithProtect(PHYSICAL_ADDRESS PhysicalAddress, SIZE_T NumberOfBytes, ULONG Protect) {
 	return MmMapIoSpaceEx(PhysicalAddress, NumberOfBytes, Protect);
+}
+#endif
+
+BOOL ReadPhysicalMemory(PHYSICAL_ADDRESS PhysicalAddress, PVOID KernelBuffer, SIZE_T BufferSize) {
+	PVOID VirtualAddress = MmMapIoSpace(PhysicalAddress, BufferSize, MmNonCached);
+	if (VirtualAddress == NULL) return FALSE;
+
+	RtlCopyMemory(KernelBuffer, VirtualAddress, BufferSize);
+	MmUnmapIoSpace(VirtualAddress, BufferSize);
+	return TRUE;
+}
+
+BOOL WritePhysicalMemory(PHYSICAL_ADDRESS PhysicalAddress, PVOID KernelBuffer, SIZE_T BufferSize) {
+	PVOID VirtualAddress = MmMapIoSpace(PhysicalAddress, BufferSize, MmNonCached);
+	if (VirtualAddress == NULL) return FALSE;
+
+	RtlCopyMemory(VirtualAddress, KernelBuffer, BufferSize);
+	MmUnmapIoSpace(VirtualAddress, BufferSize);
+	return TRUE;
 }
 
 VOID UnmapPhysicalMemory(PVOID BaseVirtualAddress, SIZE_T NumberOfBytes) {
@@ -61,16 +86,15 @@ VOID UnmapPhysicalMemory(PVOID BaseVirtualAddress, SIZE_T NumberOfBytes) {
 }
 
 BOOL ReadDmiMemory(PVOID Buffer, SIZE_T BufferSize) {
-	const SIZE_T DmiMemorySize = 65536;
-	if (BufferSize < DmiMemorySize) return FALSE;
+	if (BufferSize < DMI_SIZE) return FALSE;
 
 	PHYSICAL_ADDRESS DmiAddress;
 	DmiAddress.QuadPart = 0xF0000;
-	PVOID DmiMemory = MapPhysicalMemory(DmiAddress, DmiMemorySize, MmNonCached);
+	PVOID DmiMemory = MmMapIoSpace(DmiAddress, DMI_SIZE, MmNonCached);
 	BOOL Status = DmiMemory != NULL;
 	if (Status) {
-		RtlCopyMemory(Buffer, DmiMemory, DmiMemorySize);
-		UnmapPhysicalMemory(DmiMemory, DmiMemorySize);
+		RtlCopyMemory(Buffer, DmiMemory, DMI_SIZE);
+		MmUnmapIoSpace(DmiMemory, DMI_SIZE);
 	}
 	return Status;
 }
@@ -85,7 +109,7 @@ VOID UnsecureVirtualMemory(HANDLE SecureHandle) {
 
 BOOLEAN IsAddressValid(PVOID VirtualAddress) {
 	return MmIsAddressValid(VirtualAddress);
-}
+} 
 
 BOOL IsUsermodeMemoryReadable(PVOID Address, SIZE_T NumberOfBytes, ULONG RequiredAlignment) {
 	__try {
@@ -105,6 +129,8 @@ BOOL IsUsermodeMemoryWriteable(PVOID Address, SIZE_T NumberOfBytes, ULONG Requir
 	}
 }
 
+#ifdef ENABLE_WIN10_EXTENSIONS
 NTSTATUS CopyMemory(PVOID Destination, MM_COPY_ADDRESS Source, SIZE_T NumberOfBytes, ULONG Flags, OUT PSIZE_T BytesCopied) {
 	return MmCopyMemory(Destination, Source, NumberOfBytes, Flags, BytesCopied);
 }
+#endif

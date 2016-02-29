@@ -1,0 +1,154 @@
+#pragma once
+
+#include <wdm.h>
+#include <windef.h>
+
+typedef struct _IOCTL_INFO {
+	PVOID InputBuffer;
+	PVOID OutputBuffer;
+	ULONG InputBufferSize;
+	ULONG OutputBufferSize;
+	ULONG ControlCode;
+} IOCTL_INFO, *PIOCTL_INFO;
+
+NTSTATUS __fastcall DispatchIOCTL(IN PIOCTL_INFO RequestInfo, OUT PULONG ResponseLength);
+
+#define IOCTL(Code) (CTL_CODE(0x8000, Code, METHOD_NEITHER, FILE_ANY_ACCESS))
+
+// NativeFunctions:
+
+typedef struct _WRITE_IO_PORT_BYTE_INPUT {
+	WORD PortNumber;
+	BYTE Data;
+} WRITE_IO_PORT_BYTE_INPUT, *PWRITE_IO_PORT_BYTE_INPUT;
+
+typedef struct _WRITE_IO_PORT_WORD_INPUT {
+	WORD PortNumber;
+	WORD Data;
+} WRITE_IO_PORT_WORD_INPUT, *PWRITE_IO_PORT_WORD_INPUT;
+
+typedef struct _WRITE_IO_PORT_DWORD_INPUT {
+	WORD  PortNumber;
+	DWORD Data;
+} WRITE_IO_PORT_DWORD_INPUT, *PWRITE_IO_PORT_DWORD_INPUT;
+
+typedef struct _WRMSR_INPUT {
+	ULONG     Index;
+	ULONGLONG Data;
+} WRMSR_INPUT, *PWRMSR_INPUT;
+
+// MemoryUtils:
+
+typedef struct _GET_PHYSICAL_ADDRESS_INPUT {
+	UINT64  ProcessID;
+	PVOID64 VirtualAddress;
+} GET_PHYSICAL_ADDRESS_INPUT, *PGET_PHYSICAL_ADDRESS_INPUT;
+
+typedef struct _READ_PHYSICAL_MEMORY_INPUT {
+	PHYSICAL_ADDRESS PhysicalAddress;
+	PVOID64 Buffer;
+	ULONG   BufferSize;
+} READ_PHYSICAL_MEMORY_INPUT, *PREAD_PHYSICAL_MEMORY_INPUT;
+
+typedef struct _WRITE_PHYSICAL_MEMORY_INPUT {
+	PHYSICAL_ADDRESS PhysicalAddress;
+	PVOID64 Buffer;
+	ULONG   BufferSize;
+} WRITE_PHYSICAL_MEMORY_INPUT, *PWRITE_PHYSICAL_MEMORY_INPUT;
+
+// ProcessesUtils:
+
+typedef struct _MAP_VIRTUAL_MEMORY_INPUT {
+	UINT64  ProcessId;
+	PVOID64 VirtualAddress;
+	PVOID64 MapToVirtualAddress;
+	ULONG   Size;
+	ULONG   Protect;
+} MAP_VIRTUAL_MEMORY_INPUT, *PMAP_VIRTUAL_MEMORY_INPUT;
+
+typedef struct _MAP_VIRTUAL_MEMORY_OUTPUT {
+	PVOID64 Mdl;
+	PVOID64 MappedMemory;
+} MAP_VIRTUAL_MEMORY_OUTPUT, *PMAP_VIRTUAL_MEMORY_OUTPUT;
+
+typedef struct _UNMAP_VIRTUAL_MEMORY_INPUT {
+	PVOID64 Mdl;
+	PVOID64 MappedMemory;
+} UNMAP_VIRTUAL_MEMORY_INPUT, *PUNMAP_VIRTUAL_MEMORY_INPUT;
+
+typedef struct _READ_PROCESS_MEMORY_INPUT {
+	UINT64  ProcessId;
+	PVOID64 VirtualAddress;
+	PVOID64 Buffer;
+	ULONG   BytesToRead;
+	BYTE    AccessType;
+} READ_PROCESS_MEMORY_INPUT, *PREAD_PROCESS_MEMORY_INPUT;
+
+typedef struct _WRITE_PROCESS_MEMORY_INPUT {
+	UINT64  ProcessId;
+	PVOID64 VirtualAddress;
+	PVOID64 Buffer;
+	ULONG   BytesToWrite;
+	BYTE    AccessType;
+} WRITE_PROCESS_MEMORY_INPUT, *PWRITE_PROCESS_MEMORY_INPUT;
+
+// ShellCode:
+
+typedef struct _EXECUTE_SHELL_CODE_INPUT {
+	IN PVOID64 EntryPoint;
+	IN PVOID64 CodeBlock;
+	IN OPTIONAL PVOID64 InputData;
+	IN OPTIONAL PVOID64 OutputData;
+	IN OPTIONAL PVOID64 Result;
+} EXECUTE_SHELL_CODE_INPUT, *PEXECUTE_SHELL_CODE_INPUT;
+
+// DriverFunctions:
+
+#define GET_HANDLES_COUNT      IOCTL(0x800)
+
+// NativeFunctions:
+
+#define START_BEEPER           IOCTL(0x801)
+#define STOP_BEEPER            IOCTL(0x802)
+#define SET_BEEPER_REGIME      IOCTL(0x803)
+#define SET_BEEPER_OUT         IOCTL(0x804)
+#define SET_BEEPER_IN          IOCTL(0x805)
+#define SET_BEEPER_DIVIDER     IOCTL(0x806)
+#define SET_BEEPER_FREQUENCY   IOCTL(0x807)
+
+#define READ_IO_PORT_BYTE      IOCTL(0x808)
+#define READ_IO_PORT_WORD      IOCTL(0x809)
+#define READ_IO_PORT_DWORD     IOCTL(0x810)
+
+#define WRITE_IO_PORT_BYTE     IOCTL(0x811)
+#define WRITE_IO_PORT_WORD     IOCTL(0x812)
+#define WRITE_IO_PORT_DWORD    IOCTL(0x813)
+
+#define RDPMC                  IOCTL(0x814)
+#define RDMSR                  IOCTL(0x815)
+#define WRMSR                  IOCTL(0x816)
+
+// MemoryUtils:
+
+#define GET_PHYSICAL_ADDRESS   IOCTL(0x817)
+#define READ_PHYSICAL_MEMORY   IOCTL(0x818)
+#define WRITE_PHYSICAL_MEMORY  IOCTL(0x819)
+
+#define READ_DMI_MEMORY        IOCTL(0x820)
+
+// ShellCode:
+
+#define EXECUTE_SHELL_CODE     IOCTL(0x821)
+
+// ProcessesUtils:
+
+#define MAP_VIRTUAL_MEMORY     IOCTL(0x822)
+#define UNMAP_VIRTUAL_MEMORY   IOCTL(0x823)
+
+#define READ_PROCESS_MEMORY    IOCTL(0x824)
+#define WRITE_PROCESS_MEMORY   IOCTL(0x825)
+
+#define ALLOW_IO               IOCTL(0x826)
+#define DISALLOW_IO            IOCTL(0x827)
+
+

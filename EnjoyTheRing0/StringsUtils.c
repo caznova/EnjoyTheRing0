@@ -28,12 +28,12 @@ NTSTATUS SafeStrCpyW(LPWSTR Dest, SIZE_T DestMaxCharacters, LPWSTR Source) {
 
 NTSTATUS SafeStrLenA(LPSTR String, SIZE_T MaxCharacters, PSIZE_T Length) {
 	ValidateMaxBufferSize(&MaxCharacters);
-	return RtlStringCchLengthA(String, MaxCharacters, Length);
+	return RtlStringCchLengthA(String, MaxCharacters, (size_t *)Length);
 }
 
 NTSTATUS SafeStrLenW(LPWSTR String, SIZE_T MaxCharacters, PSIZE_T Length) {
 	ValidateMaxBufferSize(&MaxCharacters);
-	return RtlStringCchLengthW(String, MaxCharacters, Length);
+	return RtlStringCchLengthW(String, MaxCharacters, (size_t *)Length);
 }
 
 SIZE_T LengthA(LPSTR Str) {

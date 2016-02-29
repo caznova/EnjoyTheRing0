@@ -17,9 +17,11 @@ NTSTATUS SetKeyValue (HANDLE hKey, LPWSTR ValueName, ULONG Type, PVOID Data, ULO
 NTSTATUS SetKeyDword (HANDLE hKey, LPWSTR ValueName, DWORD Value);
 NTSTATUS SeyKeyBinary(HANDLE hKey, LPWSTR ValueName, PVOID Data, ULONG DataSize);
 NTSTATUS SetKeyString(HANDLE hKey, LPWSTR ValueName, LPWSTR String);
+NTSTATUS SetKeyExpandString(HANDLE hKey, LPWSTR ValueName, LPWSTR String);
 
 NTSTATUS GetKeyValue (HANDLE hKey, LPWSTR ValueName, PVOID OutputBuffer, ULONG BufferSize, OUT OPTIONAL PULONG BytesReturned);
-NTSTATUS GetKeyWord  (HANDLE hKey, LPWSTR ValueName, OUT PDWORD Value);
+NTSTATUS GetKeyDword (HANDLE hKey, LPWSTR ValueName, OUT PDWORD Value);
+
 NTSTATUS GetKeyBinary(HANDLE hKey, LPWSTR ValueName, OUT LPWSTR OutputBuffer, ULONG BufferSize, OUT OPTIONAL PULONG BytesReturned);
 NTSTATUS GetKeyString(HANDLE hKey, LPWSTR ValueName, OUT LPWSTR OutputStringBuffer, ULONG BufferSize, OUT OPTIONAL PULONG BytesReturned);
 NTSTATUS GetKeyStringWithAlloc(HANDLE hKey, LPWSTR ValueName, OUT LPWSTR *OutputStringBuffer, OUT OPTIONAL PULONG BytesReturned);
