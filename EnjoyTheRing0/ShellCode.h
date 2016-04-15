@@ -25,7 +25,6 @@ typedef BYTE USERMODE_MEMORY_ACCESS;
 typedef struct _UM_MEMORY_INFO {
 	PVOID64 Address;
 	ULONG   Size;
-	ULONG   Protect;
 	USERMODE_MEMORY_ACCESS AccessMethod;
 } UM_MEMORY_INFO, *PUM_MEMORY_INFO;
 

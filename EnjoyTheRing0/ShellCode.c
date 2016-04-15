@@ -51,7 +51,6 @@ BOOL __fastcall PrepareUsermodeMemory(PUM_MEMORY_INFO UmMemoryInfo, PMEMORY_DESC
 				NULL,
 				MemoryDescriptor->Size,
 				KernelMode,
-				UmMemoryInfo->Protect == 0 ? PAGE_EXECUTE_READWRITE : UmMemoryInfo->Protect,
 				&MemoryDescriptor->Mdl
 			);
 			break;

@@ -1,6 +1,6 @@
 #pragma once
 
-#include "ProcessesUtils.h"
+#include "IpiWrapper.h"
 #include "NativeFunctions.h"
 
 VOID GlobalDisableWriteProtection();

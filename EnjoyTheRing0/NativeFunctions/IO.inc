@@ -1,5 +1,5 @@
 proc StartBeeper
-  ; Р’Р·РІРѕРґРёРј РїРµСЂРІС‹Рµ РґРІР° Р±РёС‚Р°, РѕС‚РІРµС‡Р°СЋС‰РёРµ Р·Р° РІРєР»СЋС‡РµРЅРЅРѕСЃС‚СЊ РїРёС‰Р°Р»РєРё РёР· РїРѕСЂС‚Р° 61h:
+  ; Взводим первые два бита, отвечающие за включенность пищалки из порта 61h:
   in al, 61h
   or al, 00000011b
   out 61h, al
@@ -9,7 +9,7 @@ endp
 ;- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
 proc StopBeeper
-  ; РЎР±СЂР°СЃС‹РІР°РµРј РїРµСЂРІС‹Рµ РґРІР° Р±РёС‚Р° РІ РїРѕСЂС‚Рµ 61h, РѕС‚РІРµС‡Р°СЋС‰РёРµ Р·Р° РІРєР»СЋС‡РµРЅРЅРѕСЃС‚СЊ РїРёС‰Р°Р»РєРё:
+  ; Сбрасываем первые два бита в порте 61h, отвечающие за включенность пищалки:
   in al, 61h
   and al, 11111100b
   out 61h, al
@@ -19,12 +19,12 @@ endp
 ;- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
 proc SetBeeperRegime
-  ; РРЅРёС†РёР°Р»РёР·РёСЂСѓРµРј РїРёС‰Р°Р»РєСѓ:
+  ; Инициализируем пищалку:
   mov al, 10110110b ; 0B6h = 10 11 011 0
-     ;     10 = РЅРѕРјРµСЂ РєР°РЅР°Р»Р°, РєРѕС‚РѕСЂС‹Рј РјС‹ Р±СѓРґРµРј СѓРїСЂР°РІР»СЏС‚СЊ (10b = РІС‚РѕСЂРѕР№ РєР°РЅР°Р»)
-     ;     11 = С‚РёРї РѕРїРµСЂР°С†РёРё (11b = С‡С‚РµРЅРёРµ/Р·Р°РїРёСЃСЊ СЃРЅР°С‡Р°Р»Р° РјР»Р°РґС€РµРіРѕ, Р° РїРѕС‚РѕРј СЃС‚Р°СЂС€РµРіРѕ Р±Р°Р№С‚Р°)
-     ;    011 = СЂРµР¶РёРј СЂР°Р±РѕС‚С‹ РєР°РЅР°Р»Р° (011b = РіРµРЅРµСЂР°С‚РѕСЂ РїСЂСЏРјРѕСѓРіРѕР»СЊРЅС‹С… РёРјРїСѓР»СЊСЃРѕРІ (РѕСЃРЅРѕРІРЅРѕР№ СЂРµР¶РёРј))
-     ;      0 = С„РѕСЂРјР°С‚ СЃС‡РµС‚С‡РёРєР° (0 = 16-СЂР°Р·СЂСЏРґРЅРѕРµ С‡РёСЃР»Рѕ РѕС‚ 0 РґРѕ 0FFFFh)
+     ;     10 = номер канала, которым мы будем управлять (10b = второй канал)
+     ;     11 = тип операции (11b = чтение/запись сначала младшего, а потом старшего байта)
+     ;    011 = режим работы канала (011b = генератор прямоугольных импульсов (основной режим))
+     ;      0 = формат счетчика (0 = 16-разрядное число от 0 до 0FFFFh)
   out 43h, al
   ret
 endp
@@ -32,7 +32,7 @@ endp
 ;- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
 proc SetBeeperOut
-  ; Р’Р·РІРѕРґРёРј 1Р№ Р±РёС‚, РѕС‚РІРµС‡Р°СЋС‰РёР№ Р·Р° РїРѕР»РѕР¶РµРЅРёРµ РјРµРјР±СЂР°РЅС‹ РёР· РїРѕСЂС‚Р° 61h - РїРѕРґР°С‘Рј РЅР°РїСЂСЏР¶РµРЅРёРµ:
+  ; Взводим 1й бит, отвечающий за положение мембраны из порта 61h - подаём напряжение:
   in al, 61h
   or al, 00000010b
   out 61h, al
@@ -41,7 +41,7 @@ endp
 ;- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
 proc SetBeeperIn
-  ; РЎР±СЂР°СЃС‹РІР°РµРј 1Р№ Р±РёС‚, РѕС‚РІРµС‡Р°СЋС‰РёР№ Р·Р° РїРѕР»РѕР¶РµРЅРёРµ РјРµРјР±СЂР°РЅС‹ РёР· РїРѕСЂС‚Р° 61h - СЃРЅРёРјР°РµРј РЅР°РїСЂВ¤Р¶РµРЅРёРµ:
+  ; Сбрасываем 1й бит, отвечающий за положение мембраны из порта 61h - снимаем напр¤жение:
   in al, 61h
   and al, 11111101b
   out 61h, al
@@ -49,7 +49,7 @@ endp
 
 ;- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
-proc SetBeeperDivider Divider: Word
+proc SetBeeperDivider ; Divider: Word
   mov ax, cx
   out 42h, al
   shr ax, 8
@@ -59,7 +59,7 @@ endp
 
 ;- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
-proc SetBeeperFrequency Frequency: Word
+proc SetBeeperFrequency ; Frequency: Word
   ; Divider = Round(1193182 / Frequency):
   
   mov ax, 19
@@ -82,9 +82,9 @@ endp
 ;HHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHH
 
 
-proc WriteIoPortByte PortNumber: Word, InputData: Byte
-  ; CX - РЅРѕРјРµСЂ РїРѕСЂС‚Р°
-  ; DL - РґР°РЅРЅС‹Рµ
+proc WriteIoPortByte ; PortNumber: Word, InputData: Byte
+  ; CX - номер порта
+  ; DL - данные
   mov al, dl
   mov dx, cx
   out dx, al
@@ -93,9 +93,9 @@ endp
 
 ;- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
-proc WriteIoPortWord PortNumber: Word, InputData: Word
-  ; CX - РЅРѕРјРµСЂ РїРѕСЂС‚Р°
-  ; DX - РґР°РЅРЅС‹Рµ
+proc WriteIoPortWord ; PortNumber: Word, InputData: Word
+  ; CX - номер порта
+  ; DX - данные
   mov ax, dx
   mov dx, cx
   out dx, ax
@@ -104,9 +104,9 @@ endp
 
 ;- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
-proc WriteIoPortDword PortNumber: Word, InputData: DWord
-  ; CX - РЅРѕРјРµСЂ РїРѕСЂС‚Р°
-  ; EDX - РґР°РЅРЅС‹Рµ
+proc WriteIoPortDword ; PortNumber: Word, InputData: DWord
+  ; CX - номер порта
+  ; EDX - данные
   mov eax, edx
   mov dx, cx
   out dx, eax
@@ -117,9 +117,9 @@ endp
 ;HHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHH
 
 
-proc ReadIoPortByte PortNumber: Word 
-  ; CX - РЅРѕРјРµСЂ РїРѕСЂС‚Р°
-  ; AL - РїСЂРѕС‡РёС‚Р°РЅРЅС‹Рµ РґР°РЅРЅС‹Рµ
+proc ReadIoPortByte ; PortNumber: Word 
+  ; CX - номер порта
+  ; AL - прочитанные данные
   mov dx, cx
   in al, dx
   ret
@@ -127,9 +127,9 @@ endp
 
 ;- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
-proc ReadIoPortWord PortNumber: Word
-  ; CX - РЅРѕРјРµСЂ РїРѕСЂС‚Р°
-  ; AX - РїСЂРѕС‡РёС‚Р°РЅРЅС‹Рµ РґР°РЅРЅС‹Рµ
+proc ReadIoPortWord ; PortNumber: Word
+  ; CX - номер порта
+  ; AX - прочитанные данные
   mov dx, cx
   in ax, dx
   ret
@@ -137,9 +137,9 @@ endp
 
 ;- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
-proc ReadIoPortDword PortNumber: Word
-  ; CX - РЅРѕРјРµСЂ РїРѕСЂС‚Р°
-  ; EAX - РїСЂРѕС‡РёС‚Р°РЅРЅС‹Рµ РґР°РЅРЅС‹Рµ
+proc ReadIoPortDword ; PortNumber: Word
+  ; CX - номер порта
+  ; EAX - прочитанные данные
   mov dx, cx
   in eax, dx
   ret

@@ -74,9 +74,11 @@ BOOL ReadPhysicalMemory(PHYSICAL_ADDRESS PhysicalAddress, PVOID KernelBuffer, SI
 
 BOOL WritePhysicalMemory(PHYSICAL_ADDRESS PhysicalAddress, PVOID KernelBuffer, SIZE_T BufferSize) {
 	PVOID VirtualAddress = MmMapIoSpace(PhysicalAddress, BufferSize, MmNonCached);
+	DbgPrint("Virtual address = 0x%X", VirtualAddress);
 	if (VirtualAddress == NULL) return FALSE;
 
 	RtlCopyMemory(VirtualAddress, KernelBuffer, BufferSize);
+
 	MmUnmapIoSpace(VirtualAddress, BufferSize);
 	return TRUE;
 }

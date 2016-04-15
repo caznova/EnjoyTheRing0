@@ -1,6 +1,7 @@
 #pragma once
 
 #include "MemoryUtils.h"
+#include "NativeFunctions.h"
 
 // Константы операций для каллбэков:
 #define PROCESS_TERMINATE                  (0x0001)  
@@ -17,8 +18,13 @@
 #define PROCESS_SUSPEND_RESUME             (0x0800)  
 #define PROCESS_QUERY_LIMITED_INFORMATION  (0x1000)
 
-// Маска IOPL для AllowIO/DisallowIO:
+// Маска IOPL для RaiseIOPL*/ResetIOPL*:
 #define IOPL_ACCESS_MASK 0x3000 // 12й и 13й (начиная с нуля) биты в регистре EFLAGS
+
+#define ESP0_EFLAGS_OFFSET 12 // Смещение от дна стека в TSS->ESP0 (третье двойное слово)
+
+#define EFLAGS_RESERVED_BITS_MASK 0xFFC0802A
+#define MaskEFlagsReservedBits(EFlags) (EFlags | EFLAGS_RESERVED_BITS_MASK)
 
 // Получить адрес функции из ntoskrnl.exe/hal.dll:
 PVOID GetKernelProcAddress(LPWSTR ProcedureName);
@@ -48,12 +54,36 @@ BOOL DetachFromProcess(IN PKAPC_STATE ApcState);
 NTSTATUS GetThreadContext(IN PETHREAD Thread, IN OUT PCONTEXT Context, IN KPROCESSOR_MODE PreviousMode);
 NTSTATUS SetThreadContext(IN PETHREAD Thread, IN PCONTEXT Context    , IN KPROCESSOR_MODE PreviousMode);
 
+// Информация о процессе:
+NTSTATUS SetInformationProcess(
+	HANDLE hProcess,
+	PROCESSINFOCLASS ProcessInformationClass,
+	PVOID ProcessInformation,
+	ULONG ProcessInformationLength
+);
+
+NTSTATUS QueryInformationProcess(
+	HANDLE hProcess,
+	PROCESSINFOCLASS ProcessInformationClass,
+	PVOID ProcessInformation,
+	ULONG ProcessInformationLength,
+	PULONG ReturnLength
+);
+
+// Подъём IOPL:
 #ifdef _AMD64_
-// Манипуляция контекстом:
 PKTRAP_FRAME GetTrapFrame();
-VOID AllowIO();
-VOID DisallowIO();
+VOID RaiseIOPLByTrapFrame();
+VOID ResetIOPLByTrapFrame();
 #endif
+VOID RaiseIOPLByTrapFrameScan();
+VOID ResetIOPLByTrapFrameScan();
+VOID RaiseIOPLByTSS();
+VOID ResetIOPLByTSS();
+
+// Модификация IOPM:
+NTSTATUS RaiseIOPM(OPTIONAL HANDLE ProcessId);
+NTSTATUS ResetIOPM(OPTIONAL HANDLE ProcessId);
 
 // Заморозка/разморозка процесса:
 NTSTATUS SuspendProcess(IN PEPROCESS Process);
@@ -70,6 +100,8 @@ NTSTATUS ExitSystemThread(NTSTATUS ExitStatus);
 // Выделение и освобождение виртуальной памяти в контексте процесса:
 NTSTATUS VirtualAlloc(HANDLE hProcess, SIZE_T Size, OUT PVOID *VirtualAddress);
 NTSTATUS VirtualFree (HANDLE hProcess, PVOID VirtualAddress);
+NTSTATUS VirtualAllocByProcessId(HANDLE ProcessId, SIZE_T Size, OUT PVOID *VirtualAddress);
+NTSTATUS VirtualFreeByProcessId (HANDLE ProcessId, PVOID VirtualAddress);
 
 // Получить физический адрес памяти в определённом процессе:
 PHYSICAL_ADDRESS GetPhysicalAddressInProcess(HANDLE ProcessId, PVOID BaseVirtualAddress);
@@ -81,7 +113,6 @@ PVOID MapVirtualMemory(
 	OPTIONAL PVOID MapToVirtualAddress,
 	ULONG Size,
 	KPROCESSOR_MODE ProcessorMode,
-	ULONG Protect,
 	OUT PMDL* pMdl
 );
 VOID UnmapVirtualMemory(PMDL Mdl, PVOID MappedMemory);

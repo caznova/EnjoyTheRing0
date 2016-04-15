@@ -1,4 +1,4 @@
-; РЎР±СЂР°СЃС‹РІР°РµРј cr0.wp (16Р№ Р±РёС‚, РЅР°С‡РёРЅР°СЏ СЃ РЅСѓР»РµРІРѕРіРѕ):
+; Сбрасываем cr0.wp (16й бит, начиная с нулевого):
 proc DisableWriteProtection
   if defined x64 
     mov rax, cr0
@@ -15,7 +15,7 @@ endp
 
 ;- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
-; Р’Р·РІРѕРґРёРј cr0.wp (16Р№ Р±РёС‚, РЅР°С‡РёРЅР°СЏ СЃ РЅСѓР»РµРІРѕРіРѕ):
+; Взводим cr0.wp (16й бит, начиная с нулевого):
 proc EnableWriteProtection
   if defined x64 
     mov rax, cr0
@@ -32,7 +32,7 @@ endp
 
 ;- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
-; SMEP = 7Р№ Р±РёС‚ (РЅР°С‡РёРЅР°СЏ СЃ РЅСѓР»РµРІРѕРіРѕ) РІ EBX РїРѕСЃР»Рµ CPUID (EAX = 7, ECX = 0):
+; SMEP = 7й бит (начиная с нулевого) в EBX после CPUID (EAX = 7, ECX = 0):
 proc IsSMEPPresent
   if defined x64
     push rbx
@@ -67,7 +67,7 @@ endp
 
 ;- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
-; РЎР±СЂР°СЃС‹РІР°РµРј cr4.smep (20Р№ Р±РёС‚, РЅР°С‡РёРЅР°СЏ СЃ РЅСѓР»РµРІРѕРіРѕ):
+; Сбрасываем cr4.smep (20й бит, начиная с нулевого):
 proc DisableSMEP
   if defined x64 
     mov rax, cr4
@@ -84,7 +84,7 @@ endp
 
 ;- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
-; Р’Р·РІРѕРґРёРј cr4.smep (20Р№ Р±РёС‚, РЅР°С‡РёРЅР°СЏ СЃ РЅСѓР»РµРІРѕРіРѕ):
+; Взводим cr4.smep (20й бит, начиная с нулевого):
 proc EnableSMEP
   if defined x64 
     mov rax, cr4
@@ -101,7 +101,7 @@ endp
 
 ;- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
-; SMAP = 20Р№ Р±РёС‚ (РЅР°С‡РёРЅР°СЏ СЃ РЅСѓР»РµРІРѕРіРѕ) РІ EBX РїРѕСЃР»Рµ CPUID (EAX = 7, ECX = 0):
+; SMAP = 20й бит (начиная с нулевого) в EBX после CPUID (EAX = 7, ECX = 0):
 proc IsSMAPPresent
   if defined x64
     push rbx
@@ -136,7 +136,7 @@ endp
 
 ;- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
-; РЎР±СЂР°СЃС‹РІР°РµРј cr4.smap (21Р№ Р±РёС‚, РЅР°С‡РёРЅР°СЏ СЃ РЅСѓР»РµРІРѕРіРѕ):
+; Сбрасываем cr4.smap (21й бит, начиная с нулевого):
 proc DisableSMAP
   if defined x64 
     mov rax, cr4
@@ -153,7 +153,7 @@ endp
 
 ;- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
-; Р’Р·РІРѕРґРёРј cr4.smap (21Р№ Р±РёС‚, РЅР°С‡РёРЅР°СЏ СЃ РЅСѓР»РµРІРѕРіРѕ):
+; Взводим cr4.smap (21й бит, начиная с нулевого):
 proc EnableSMAP
   if defined x64 
     mov rax, cr4
@@ -170,21 +170,21 @@ endp
 
 ;- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
-proc OperateCrDrRegister OperationType: Word ; OptionalData: LongWord|Uint64
-; CH  = NN - РќРѕРјРµСЂ РґРµР№СЃС‚РІРёСЏ [rCR:20h, wCR:22h, rDR:21h, wDR:23h]
-; CL  = XX - РќРѕРјРµСЂ СЂРµРіРёСЃС‚СЂР° [0..15]
-; rDX = РћРїС†РёРѕРЅР°Р»СЊРЅС‹Рµ РґР°РЅРЅС‹Рµ РґР»СЏ Р·Р°РїРёСЃРё (РµСЃР»Рё CH = 22h РёР»Рё 23h)
+proc OperateCrDrRegister ; OperationType: Word, OptionalData: LongWord|Uint64
+; CH  = NN - Номер действия [rCR:20h, wCR:22h, rDR:21h, wDR:23h]
+; CL  = XX - Номер регистра [0..15]
+; rDX = Опциональные данные для записи (если CH = 22h или 23h)
     
-; XX - РќРѕРјРµСЂ СЂРµРіРёСЃС‚СЂР°: [[C0, C8, D0, D8, E0, E8, F0, F8]]
-; NN - Р”РµР№СЃС‚РІРёРµ (r/w) Рё СЂРµРіРёСЃС‚СЂ (CR/DR) : [[rCR:20h, wCR:22h, rDR:21h, wDR:23h]]
+; XX - Номер регистра: [[C0, C8, D0, D8, E0, E8, F0, F8]]
+; NN - Действие (r/w) и регистр (CR/DR) : [[rCR:20h, wCR:22h, rDR:21h, wDR:23h]]
     
 ;    0F NN XX | x86|x64 | mov rAX, xR0..xR7  | mov xR0..xR7 , rAX
 ; F0 0F NN C0 |     x86 | mov EAX, xR8..xR15 | mov xR8..xR15, EAX
 ; 44 0F NN XX |     x64 | mov RAX, xR8..xR15 | mov xR8..xR15, RAX
 
-; РџСЂРѕРІРµСЂСЏРµРј NN РЅР° РІР°Р»РёРґРЅРѕСЃС‚СЊ:
+; Проверяем NN на валидность:
 @ActionChecking:
-  mov eax, 23212220h ; РџРµСЂРµР±РёСЂР°РµРј РІСЃРµ РІР°СЂРёР°РЅС‚С‹: 20h, 22h, 21h Рё 23h
+  mov eax, 23212220h ; Перебираем все варианты: 20h, 22h, 21h и 23h
   cmp ch, al
   je @ValidationSuccessful
   shr eax, 8
@@ -193,23 +193,23 @@ proc OperateCrDrRegister OperationType: Word ; OptionalData: LongWord|Uint64
   
 @ValidationSuccessful:
   
-  ; РџСЂРѕРІРµСЂСЏРµРј РЅР° РІР°Р»РёРґРЅРѕСЃС‚СЊ РЅРѕРјРµСЂ СЂРµРіРёСЃС‚СЂР°
+  ; Проверяем на валидность номер регистра
   cmp cl, 15
-  jg @ValidationFailed ; Р•СЃР»Рё РЅРѕРјРµСЂ СЂРµРіРёСЃС‚СЂР° > 15 - РЅРµРІР°Р»РёРґРЅС‹Р№ РЅРѕРјРµСЂ
+  jg @ValidationFailed ; Если номер регистра > 15 - невалидный номер
   
   cmp cl, 7
-  jg @NumberIsGreaterThan7 ; Р•СЃР»Рё РЅРѕРјРµСЂ [8..15] - С‡РµС‚С‹СЂС‘С…Р±Р°Р№С‚РѕРІС‹Р№ РјР°С€РёРЅРЅС‹Р№ РєРѕРґ
+  jg @NumberIsGreaterThan7 ; Если номер [8..15] - четырёхбайтовый машинный код
 
-  ; Р’С‹СЃС‡РёС‚С‹РІР°РµРј Р±Р°Р№С‚, РѕРїСЂРµРґРµР»СЏСЋС‰РёР№ РЅРѕРјРµСЂ СЂРµРіРёСЃС‚СЂР°:
+  ; Высчитываем байт, определяющий номер регистра:
   mov al, cl
-  mov cl, 8 ; Р‘Р°Р№С‚С‹, РѕРїСЂРµРґРµР»СЏСЋС‰РёРµ РЅРѕРјРµСЂ СЂРµРіРёСЃС‚СЂР°, РёРґСѓС‚ СЃРѕ СЃРјРµС‰РµРЅРёРµРј 8
+  mov cl, 8 ; Байты, определяющие номер регистра, идут со смещением 8
   mul cl
   mov cl, al
-  add cl, 0C0h ; CL = 0xC0 + ByteNumber * 8 - Р±Р°Р№С‚, РѕРїСЂРµРґРµР»СЏСЋС‰РёР№ РЅРѕРјРµСЂ СЂРµРіРёСЃС‚СЂР°
+  add cl, 0C0h ; CL = 0xC0 + ByteNumber * 8 - байт, определяющий номер регистра
   
-  ; РџСѓС‚РёРЅСЃРєР°СЏ РјРЅРѕРіРѕС…РѕРґРѕРІРѕС‡РєР°!
-  mov ax, 900Fh ; Р’ CH - РЅРѕРјРµСЂ РѕРїРµСЂР°С†РёРё, РІ AH - NOP
-  xchg ah, ch   ; РџРѕРјРµРЅСЏРµРј РёС… РјРµСЃС‚Р°РјРё: РІ CH - NOP, РІ AH - РЅРѕРјРµСЂ РѕРїРµСЂР°С†РёРё
+  ; Путинская многоходовочка!
+  mov ax, 900Fh ; В CH - номер операции, в AH - NOP
+  xchg ah, ch   ; Поменяем их местами: в CH - NOP, в AH - номер операции
   
   ; AX = NN0Fh | AH = NN | AL = 0F |
   ; CX = 90XXh | CH = 90 | CL = XX |
@@ -221,9 +221,9 @@ proc OperateCrDrRegister OperationType: Word ; OptionalData: LongWord|Uint64
 @NumberIsGreaterThan7:
   if defined x64
     mov al, cl
-    mov cl, 8 ; Р‘Р°Р№С‚С‹, РѕРїСЂРµРґРµР»СЏСЋС‰РёРµ РЅРѕРјРµСЂ СЂРµРіРёСЃС‚СЂР°, РёРґСѓС‚ СЃРѕ СЃРјРµС‰РµРЅРёРµРј 8
+    mov cl, 8 ; Байты, определяющие номер регистра, идут со смещением 8
     mul cl
-    add al, 0C0h ; CH = 0xC0 + ByteNumber * 8 - Р±Р°Р№С‚, РѕРїСЂРµРґРµР»СЏСЋС‰РёР№ РЅРѕРјРµСЂ СЂРµРіРёСЃС‚СЂР°
+    add al, 0C0h ; CH = 0xC0 + ByteNumber * 8 - байт, определяющий номер регистра
     mov cl, al
     xchg ah, al
     mov ax, 0F44h  
@@ -249,7 +249,7 @@ proc OperateCrDrRegister OperationType: Word ; OptionalData: LongWord|Uint64
     mov eax, edx
   end if
   
-  InstructionBlock db 4 dup 90h ; Р РµР·РµСЂРІРёСЂСѓРµРј РјРµСЃС‚Рѕ РїРѕРґ РёРЅСЃС‚СЂСѓРєС†РёСЋ
+  InstructionBlock db 4 dup 90h ; Резервируем место под инструкцию
   
 @ValidationFailed:
   ret
@@ -258,8 +258,8 @@ endp
 
 ;- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
-proc IdtGdtTrOperation Operation: DWord ; Data: Pointer
+proc IdtGdtTrOperation ; Operation: DWord, Data: Pointer
   mov dword [IdtGdtTrInstructionBlock], ecx
-  IdtGdtTrInstructionBlock dd 90909090h
+  IdtGdtTrInstructionBlock db 4 dup 90h
   ret
 endp

@@ -2,6 +2,7 @@
 #include "ProcessesUtils.h"
 #include "NativeFunctions.h"
 #include "ShellCode.h"
+#include "PCI.h"
 #include "IOCTLDispatcher.h"
 
 NTSTATUS __fastcall DispatchIOCTL(IN PIOCTL_INFO RequestInfo, OUT PULONG ResponseLength) {
@@ -9,7 +10,6 @@ NTSTATUS __fastcall DispatchIOCTL(IN PIOCTL_INFO RequestInfo, OUT PULONG Respons
 
 #define INPUT(Type)  ((Type)RequestInfo->InputBuffer) 
 #define OUTPUT(Type) ((Type)RequestInfo->OutputBuffer)
-
 #define SET_RESPONSE_LENGTH(Length) if (ResponseLength != NULL) {*ResponseLength = (Length);}
 
 	switch (RequestInfo->ControlCode) {
@@ -103,6 +103,43 @@ NTSTATUS __fastcall DispatchIOCTL(IN PIOCTL_INFO RequestInfo, OUT PULONG Respons
 
 // MemoryUtils:
 
+	case ALLOC_KERNEL_MEMORY:
+		*OUTPUT(PVOID*) = GetMem(*INPUT(PSIZE_T));
+		SET_RESPONSE_LENGTH(sizeof(PVOID));
+		break;
+
+	case FREE_KERNEL_MEMORY:
+		FreeMem(*INPUT(PVOID*));
+		break;
+
+	case COPY_MEMORY:
+		RtlCopyMemory(
+			(PVOID)INPUT(PCOPY_MEMORY_INPUT)->Destination,
+			(PVOID)INPUT(PCOPY_MEMORY_INPUT)->Source,
+			(SIZE_T)INPUT(PCOPY_MEMORY_INPUT)->Size
+		);
+		break;
+
+	case FILL_MEMORY:
+		RtlFillMemory(
+			(PVOID)INPUT(PFILL_MEMORY_INPUT)->Destination,
+			(SIZE_T)INPUT(PFILL_MEMORY_INPUT)->Size,
+			(BYTE)INPUT(PFILL_MEMORY_INPUT)->FillingByte
+		);
+		break;
+
+	case ALLOC_PHYSICAL_MEMORY:
+		*OUTPUT(PVOID*) = AllocPhysicalMemory(
+			INPUT(PALLOC_PHYSICAL_MEMORY_INPUT)->PhysicalAddress,
+			(SIZE_T)INPUT(PALLOC_PHYSICAL_MEMORY_INPUT)->Size
+		);
+		SET_RESPONSE_LENGTH(sizeof(PVOID));
+		break;
+
+	case FREE_PHYSICAL_MEMORY:
+		FreePhysicalMemory(*INPUT(PVOID*));
+		break;
+
 	case GET_PHYSICAL_ADDRESS:
 		*OUTPUT(PPHYSICAL_ADDRESS) = GetPhysicalAddressInProcess(
 			(HANDLE)INPUT(PGET_PHYSICAL_ADDRESS_INPUT)->ProcessID,
@@ -131,9 +168,10 @@ NTSTATUS __fastcall DispatchIOCTL(IN PIOCTL_INFO RequestInfo, OUT PULONG Respons
 
 	case READ_DMI_MEMORY:
 		ReadDmiMemory(OUTPUT(PVOID), DMI_SIZE);
+		SET_RESPONSE_LENGTH(DMI_SIZE);
 		break;
 
-// ProcessesUtils:
+// ShellCode:
 
 	case EXECUTE_SHELL_CODE:
 		*OUTPUT(PSHELL_STATUS) = ExecuteShell(
@@ -143,6 +181,26 @@ NTSTATUS __fastcall DispatchIOCTL(IN PIOCTL_INFO RequestInfo, OUT PULONG Respons
 			(PVOID)INPUT(PEXECUTE_SHELL_CODE_INPUT)->OutputData,
 			(PVOID)INPUT(PEXECUTE_SHELL_CODE_INPUT)->Result
 		);
+		SET_RESPONSE_LENGTH(sizeof(SHELL_STATUS));
+		break;
+
+// ProcessesUtils:
+
+	case ALLOC_VIRTUAL_MEMORY:
+		OUTPUT(PALLOC_VIRTUAL_MEMORY_OUTPUT)->Status = VirtualAllocByProcessId(
+			(HANDLE)INPUT(PALLOC_VIRTUAL_MEMORY_INPUT)->ProcessId,
+			(SIZE_T)INPUT(PALLOC_VIRTUAL_MEMORY_INPUT)->Size,
+			(PVOID*)&OUTPUT(PALLOC_VIRTUAL_MEMORY_OUTPUT)->VirtualAddress
+		);
+		SET_RESPONSE_LENGTH(sizeof(ALLOC_VIRTUAL_MEMORY_OUTPUT));
+		break;
+
+	case FREE_VIRTUAL_MEMORY:
+		*OUTPUT(PNTSTATUS) = VirtualFreeByProcessId(
+			(HANDLE)INPUT(PFREE_VIRTUAL_MEMORY_INPUT)->ProcessId,
+			(PVOID)INPUT(PFREE_VIRTUAL_MEMORY_INPUT)->VirtualAddress
+		);
+		SET_RESPONSE_LENGTH(sizeof(NTSTATUS));
 		break;
 
 	case MAP_VIRTUAL_MEMORY:
@@ -152,9 +210,9 @@ NTSTATUS __fastcall DispatchIOCTL(IN PIOCTL_INFO RequestInfo, OUT PULONG Respons
 			INPUT(PMAP_VIRTUAL_MEMORY_INPUT)->MapToVirtualAddress,
 			INPUT(PMAP_VIRTUAL_MEMORY_INPUT)->Size,
 			UserMode,
-			INPUT(PMAP_VIRTUAL_MEMORY_INPUT)->Protect,
 			(PMDL*)&(OUTPUT(PMAP_VIRTUAL_MEMORY_OUTPUT)->Mdl)
 		);
+		SET_RESPONSE_LENGTH(sizeof(MAP_VIRTUAL_MEMORY_OUTPUT));
 		break;
 
 	case UNMAP_VIRTUAL_MEMORY:
@@ -188,15 +246,87 @@ NTSTATUS __fastcall DispatchIOCTL(IN PIOCTL_INFO RequestInfo, OUT PULONG Respons
 		SET_RESPONSE_LENGTH(sizeof(BOOL));
 		break;
 
+	case RAISE_IOPL_BY_TF:
 #ifdef _AMD64_
-	case ALLOW_IO:
-		AllowIO();
+		RaiseIOPLByTrapFrame();
+#else
+		Status = STATUS_NOT_IMPLEMENTED;
+#endif
 		break;
 
-	case DISALLOW_IO:
-		DisallowIO();
-		break;
+	case RESET_IOPL_BY_TF:
+#ifdef _AMD64_
+		ResetIOPLByTrapFrame();
+#else
+		Status = STATUS_NOT_IMPLEMENTED;
 #endif
+		break;
+
+	case RAISE_IOPL_BY_TF_SCAN:
+		RaiseIOPLByTrapFrameScan();
+		break;
+
+	case RESET_IOPL_BY_TF_SCAN:
+		ResetIOPLByTrapFrameScan();
+		break;
+
+	case RAISE_IOPL_BY_TSS:
+#ifdef _X86_
+		RaiseIOPLByTSS();
+#else
+		Status = STATUS_NOT_IMPLEMENTED;
+#endif
+		break;
+
+	case RESET_IOPL_BY_TSS:
+#ifdef _x86_
+		ResetIOPLByTSS();
+#else
+		Status = STATUS_NOT_IMPLEMENTED;
+#endif
+		break;
+
+	case RAISE_IOPM:
+#ifdef _X86_
+		*OUTPUT(PNTSTATUS) = RaiseIOPM((HANDLE)*INPUT(PUINT64));
+		SET_RESPONSE_LENGTH(sizeof(NTSTATUS));
+#else
+		Status = STATUS_NOT_IMPLEMENTED;
+#endif
+		break;
+
+	case RESET_IOPM:
+#ifdef _X86_
+		*OUTPUT(PNTSTATUS) = ResetIOPM((HANDLE)*INPUT(PUINT64));
+		SET_RESPONSE_LENGTH(sizeof(NTSTATUS));
+#else
+		Status = STATUS_NOT_IMPLEMENTED;
+#endif
+		break;
+
+// PCI:
+
+	case READ_PCI_CONFIG:
+		OUTPUT(PREAD_PCI_CONFIG_OUTPUT)->Status = ReadPciConfig(
+			INPUT(PREAD_PCI_CONFIG_INPUT)->PciAddress,
+			INPUT(PREAD_PCI_CONFIG_INPUT)->PciOffset,
+			(PVOID)INPUT(PREAD_PCI_CONFIG_INPUT)->Buffer,
+			INPUT(PREAD_PCI_CONFIG_INPUT)->BufferSize,
+			&OUTPUT(PREAD_PCI_CONFIG_OUTPUT)->BytesRead
+		);
+		SET_RESPONSE_LENGTH(sizeof(READ_PCI_CONFIG_OUTPUT));
+		break;
+
+	case WRITE_PCI_CONFIG:
+		OUTPUT(PWRITE_PCI_CONFIG_OUTPUT)->Status = WritePciConfig(
+			INPUT(PWRITE_PCI_CONFIG_INPUT)->PciAddress,
+			INPUT(PWRITE_PCI_CONFIG_INPUT)->PciOffset,
+			(PVOID)INPUT(PWRITE_PCI_CONFIG_INPUT)->Buffer,
+			INPUT(PWRITE_PCI_CONFIG_INPUT)->BufferSize,
+			&OUTPUT(PWRITE_PCI_CONFIG_OUTPUT)->BytesWritten
+		);
+		SET_RESPONSE_LENGTH(sizeof(WRITE_PCI_CONFIG_OUTPUT));
+		break;
 
 	default: 
 		Status = STATUS_NOT_IMPLEMENTED;
@@ -204,4 +334,10 @@ NTSTATUS __fastcall DispatchIOCTL(IN PIOCTL_INFO RequestInfo, OUT PULONG Respons
 	}
 
 	return Status;
+
+#undef INPUT
+#undef OUTPUT
+
+#undef SET_RESPONSE_LENGTH
+
 }

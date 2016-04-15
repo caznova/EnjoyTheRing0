@@ -1,5 +1,6 @@
 #pragma once
 
+#include <wdm.h>
 #include <ntdef.h>
 #include <windef.h>
 
@@ -23,6 +24,7 @@ DWORD __fastcall ReadIoPortDword(WORD PortNumber);
 
 // Interrupts:
 
+#pragma pack(push, 1)
 typedef struct _REGISTERS_STATE {
 #ifdef _AMD64_
 	DWORD64 RAX;
@@ -34,6 +36,7 @@ typedef struct _REGISTERS_STATE {
 	DWORD32 EDX;
 #endif
 } REGISTERS_STATE, *PREGISTERS_STATE;
+#pragma pack(pop)
 
 VOID __fastcall _CLI();
 VOID __fastcall _STI();
@@ -104,19 +107,146 @@ VOID    __fastcall EnableSMEP();
 VOID    __fastcall EnableSMAP();
 SIZE_T  __fastcall OperateCrDrRegister(WORD Action, OPTIONAL SIZE_T OptionalData);
 
+#pragma pack(push, 1)
+
+// AMD64 APMv2, стр. 334:
+#ifdef _X86_
+typedef struct _TSS {
+	WORD	Link;
+	WORD	Reserved1;
+	ULONG	ESP0;
+	WORD	SS0;
+	WORD	Reserved2;
+	ULONG	ESP1;
+	WORD	SS1;
+	WORD	Reserved3;
+	ULONG	ESP2;
+	WORD	SS2;
+	WORD	Reserved4;
+	ULONG	CR3;
+	ULONG	EIP;
+	ULONG	EFlags;
+	ULONG	EAX;
+	ULONG	ECX;
+	ULONG	EDX;
+	ULONG	EBX;
+	ULONG	ESP;
+	ULONG	EBP;
+	ULONG	ESI;
+	ULONG	EDI;
+	WORD	ES;
+	WORD	Reserved5;
+	WORD	CS;
+	WORD	Reserved6;
+	WORD	SS;
+	WORD	Reserved7;
+	WORD	DS;
+	WORD	Reserved8;
+	WORD	FS;
+	WORD	Reserved9;
+	WORD	GS;
+	WORD	Reserved10;
+	WORD	LDTSelector;
+	WORD	Reserved11;
+	union {
+		struct {
+			unsigned short Trap			: 1;
+			unsigned short Reserved12	: 15;
+		};
+		WORD	wReserved12;
+	};
+	WORD	IOPBBaseAddress;
+} TSS, *PTSS;
+#else
+typedef struct _TSS {
+	ULONG	Reserved1;
+	ULONG64 ESP0;
+	ULONG64 ESP1;
+	ULONG64 ESP2;
+	ULONG64 Reserved2;
+	ULONG64 IST1;
+	ULONG64 IST2;
+	ULONG64 IST3;
+	ULONG64 IST4;
+	ULONG64 IST5;
+	ULONG64 IST6;
+	ULONG64	IST7;
+	ULONG64	Reserved3;
+	WORD	Reserved4;
+	WORD	IOPBBaseAddress;
+} TSS, *PTSS;
+#endif
+
+#define ExtractLimitFromGdtEntry(GdtEntry) ((ULONG)((GdtEntry->LimitHigh << 16) | (GdtEntry->LimitLow)))
+
+#ifdef _X86_
+#define ExtractBaseFromGdtEntry(GdtEntry) ((PVOID)((GdtEntry->BaseAddressHigh << 24) | (GdtEntry->BaseAddressMiddle << 16) | (GdtEntry->BaseAddressLow)))
+// AMD64 APMv2, стр. 80:
+typedef struct _GDTENTRY {
+	unsigned LimitLow			: 16;
+	unsigned BaseAddressLow		: 16;
+	unsigned BaseAddressMiddle	: 8;
+	unsigned Type				: 4;
+	unsigned System				: 1;
+	unsigned DPL				: 2;
+	unsigned Present			: 1;
+	unsigned LimitHigh			: 4;
+	unsigned Available			: 1;
+	unsigned Reserved			: 1;
+	unsigned DefaultOperandSize : 1;
+	unsigned Granularity		: 1;
+	unsigned BaseAddressHigh	: 8;
+} GDTENTRY, *PGDTENTRY;
+#else
+#define ExtractBaseFromGdtEntry(GdtEntry) ((PVOID)(((UINT64)GdtEntry->BaseAddressHighest << 32) | (GdtEntry->BaseAddressHigh << 24) | (GdtEntry->BaseAddressMiddle << 16) | (GdtEntry->BaseAddressLow)))
+// AMD64 APMv2, стр. 91:
+typedef struct _GDTENTRY {
+	unsigned LimitLow				: 16;
+	unsigned BaseAddressLow			: 16;
+	unsigned BaseAddressMiddle		: 8;
+	unsigned Type					: 4;
+	unsigned System					: 1;
+	unsigned DPL					: 2;
+	unsigned Present				: 1;
+	unsigned LimitHigh				: 4;
+	unsigned Available				: 1;
+	unsigned Reserved1				: 2;
+	unsigned Granularity			: 1;
+	unsigned BaseAddressHigh		: 8;
+	unsigned BaseAddressHighest		: 32;
+	unsigned Reserved2				: 8;
+	unsigned SystemOrTypeZeroBit8	: 1;
+	unsigned SystemOrTypeZeroBit9	: 1;
+	unsigned SystemOrTypeZeroBit10	: 1;
+	unsigned SystemOrTypeZeroBit11	: 1;
+	unsigned SystemOrTypeZeroBit12	: 1;
+	unsigned Reserved3				: 3;
+	unsigned Reserved4				: 16;
+} GDTENTRY, *PGDTENTRY;
+#endif
+
 typedef struct _GDTR {
-	WORD	Limit;
-	DWORD64 Base;
+	WORD		Limit;
+	PGDTENTRY	Base;
 } GDTR, *PGDTR;
 
 typedef struct _IDTR {
 	WORD	Limit;
-	DWORD64 Base;
+	PVOID	Base;
 } IDTR, *PIDTR;
 
 typedef struct _TR {
-	WORD TSSDescriptorSegmentSelector;
+	union {
+		struct {
+			unsigned short RPL				: 2;
+			unsigned short TableIndicator	: 1;
+			unsigned short SelectorIndex	: 13; // Индекс в GDT (TSS Ptr = GDTR:Base + TR:SelectorIndex)
+		};
+		WORD Selector;
+	};
 } TR, *PTR;
+
+#pragma pack(pop)
 
 #define SIDT 0x900A010F
 #define SGDT 0x9002010F
@@ -126,4 +256,6 @@ typedef struct _TR {
 #define LGDT 0x9012010F
 #define LTR  0x901A000F
 
-VOID __fastcall IdtGdtTrOperation(DWORD32 Operation, PVOID Data);
+ULONG __fastcall IdtGdtTrOperation(DWORD32 Operation, PVOID Data);
+
+PTSS GetTSSPointer(OUT OPTIONAL PULONG TSSLimit);

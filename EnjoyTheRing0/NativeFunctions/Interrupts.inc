@@ -19,7 +19,7 @@ endp
 
 ;- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
-proc _INT InterruptVector: Byte ; RegistersState: PVOID
+proc _INT ; InterruptVector: Byte, RegistersState: PVOID
   
   if defined x64
     mov rdi, rdx
@@ -29,12 +29,12 @@ proc _INT InterruptVector: Byte ; RegistersState: PVOID
     push edi
   end if
   
-  ; Р—Р°РїРёСЃС‹РІР°РµРј РїСЂРµСЂС‹РІР°РЅРёРµ:
+  ; Записываем прерывание:
   mov ch, 0CDh
   xchg ch, cl
   mov word [InterruptBlock], cx
   
-  ; РќР°СЃС‚СЂР°РёРІР°РµРј СЂРµРіРёСЃС‚СЂС‹, РµСЃР»Рё РЅР°РґРѕ:
+  ; Настраиваем регистры, если надо:
   if defined x64
     test rdx, rdx
     jz @Interrupt

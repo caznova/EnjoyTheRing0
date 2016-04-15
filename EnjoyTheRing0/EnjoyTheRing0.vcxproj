@@ -91,7 +91,7 @@
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
       <TreatWarningAsError>false</TreatWarningAsError>
-      <WarningLevel>Level4</WarningLevel>
+      <WarningLevel>Level3</WarningLevel>
     </ClCompile>
     <Link>
       <AdditionalOptions>/INTEGRITYCHECK %(AdditionalOptions)</AdditionalOptions>
@@ -101,7 +101,7 @@
     <ClCompile>
       <TreatWarningAsError>false</TreatWarningAsError>
       <MinimalRebuild>true</MinimalRebuild>
-      <WarningLevel>Level4</WarningLevel>
+      <WarningLevel>Level3</WarningLevel>
     </ClCompile>
     <Link>
       <AdditionalOptions>/INTEGRITYCHECK %(AdditionalOptions)</AdditionalOptions>
@@ -148,7 +148,7 @@
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <ClCompile>
-      <WarningLevel>Level4</WarningLevel>
+      <WarningLevel>Level3</WarningLevel>
     </ClCompile>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
@@ -162,6 +162,7 @@
       <WholeProgramOptimization>true</WholeProgramOptimization>
       <BufferSecurityCheck>false</BufferSecurityCheck>
       <CallingConvention>FastCall</CallingConvention>
+      <Optimization>Full</Optimization>
     </ClCompile>
     <Link>
       <AdditionalOptions>/INTEGRITYCHECK %(AdditionalOptions)</AdditionalOptions>
@@ -172,7 +173,7 @@
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <ClCompile>
-      <WarningLevel>Level4</WarningLevel>
+      <WarningLevel>Level3</WarningLevel>
     </ClCompile>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
@@ -187,10 +188,11 @@
       <BufferSecurityCheck>false</BufferSecurityCheck>
     </ClCompile>
     <Link>
-      <LinkTimeCodeGeneration>UseLinkTimeCodeGeneration</LinkTimeCodeGeneration>
       <AdditionalOptions>/INTEGRITYCHECK %(AdditionalOptions)</AdditionalOptions>
       <MinimumRequiredVersion>
       </MinimumRequiredVersion>
+      <LinkTimeCodeGeneration>UseLinkTimeCodeGeneration</LinkTimeCodeGeneration>
+      <GenerateDebugInformation>No</GenerateDebugInformation>
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
@@ -201,9 +203,12 @@
     <ClCompile Include="FilesUtils.c" />
     <ClCompile Include="HandlesController.c" />
     <ClCompile Include="IOCTLDispatcher.c" />
+    <ClCompile Include="IpiWrapper.c" />
     <ClCompile Include="Main.c" />
     <ClCompile Include="MemoryAccessController.c" />
     <ClCompile Include="MemoryUtils.c" />
+    <ClCompile Include="NativeFunctions.c" />
+    <ClCompile Include="PCI.c" />
     <ClCompile Include="ProcessesUtils.c" />
     <ClCompile Include="Protection.c" />
     <ClCompile Include="RegistryUtils.c" />
@@ -215,10 +220,12 @@
     <ClInclude Include="FilesUtils.h" />
     <ClInclude Include="HandlesController.h" />
     <ClInclude Include="IOCTLDispatcher.h" />
+    <ClInclude Include="IpiWrapper.h" />
     <ClInclude Include="Main.h" />
     <ClInclude Include="MemoryAccessController.h" />
     <ClInclude Include="MemoryUtils.h" />
     <ClInclude Include="NativeFunctions.h" />
+    <ClInclude Include="PCI.h" />
     <ClInclude Include="ProcessesUtils.h" />
     <ClInclude Include="Protection.h" />
     <ClInclude Include="RegistryUtils.h" />
