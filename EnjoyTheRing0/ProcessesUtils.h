@@ -98,10 +98,10 @@ NTSTATUS CreateSystemThread(OUT PHANDLE hThread, PKSTART_ROUTINE ThreadProc, PVO
 NTSTATUS ExitSystemThread(NTSTATUS ExitStatus);
 
 // Выделение и освобождение виртуальной памяти в контексте процесса:
-NTSTATUS VirtualAlloc(HANDLE hProcess, SIZE_T Size, OUT PVOID *VirtualAddress);
+NTSTATUS VirtualAlloc(HANDLE hProcess, SIZE_T Size, IN OUT PVOID *VirtualAddress);
 NTSTATUS VirtualFree (HANDLE hProcess, PVOID VirtualAddress);
-NTSTATUS VirtualAllocByProcessId(HANDLE ProcessId, SIZE_T Size, OUT PVOID *VirtualAddress);
-NTSTATUS VirtualFreeByProcessId (HANDLE ProcessId, PVOID VirtualAddress);
+NTSTATUS VirtualAllocInProcess(HANDLE ProcessId, SIZE_T Size, IN OUT PVOID *VirtualAddress);
+NTSTATUS VirtualFreeInProcess (HANDLE ProcessId, PVOID VirtualAddress);
 
 // Получить физический адрес памяти в определённом процессе:
 PHYSICAL_ADDRESS GetPhysicalAddressInProcess(HANDLE ProcessId, PVOID BaseVirtualAddress);

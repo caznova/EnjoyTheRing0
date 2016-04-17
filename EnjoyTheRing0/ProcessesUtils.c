@@ -126,11 +126,8 @@ NTSTATUS ExitSystemThread(NTSTATUS ExitStatus) {
 
 
 
-NTSTATUS VirtualAlloc(HANDLE hProcess, SIZE_T Size, OUT PVOID *VirtualAddress) {
-	PVOID BaseAddress = NULL;
-	NTSTATUS Status = ZwAllocateVirtualMemory(hProcess, &BaseAddress, 0, &Size, MEM_COMMIT, PAGE_EXECUTE_READWRITE);
-	*VirtualAddress = BaseAddress;
-	return Status;
+NTSTATUS VirtualAlloc(HANDLE hProcess, SIZE_T Size, IN OUT PVOID *VirtualAddress) {
+	return ZwAllocateVirtualMemory(hProcess, VirtualAddress, 0, &Size, MEM_COMMIT, PAGE_EXECUTE_READWRITE);
 };
 
 NTSTATUS VirtualFree(HANDLE hProcess, PVOID VirtualAddress) {
@@ -140,22 +137,16 @@ NTSTATUS VirtualFree(HANDLE hProcess, PVOID VirtualAddress) {
 
 
 
-NTSTATUS VirtualAllocByProcessId(HANDLE ProcessId, SIZE_T Size, OUT PVOID *VirtualAddress) {
+NTSTATUS VirtualAllocInProcess(HANDLE ProcessId, SIZE_T Size, IN OUT PVOID *VirtualAddress) {
 	HANDLE hProcess;
 	NTSTATUS Status = OpenProcess(ProcessId, &hProcess);
-	if NT_SUCCESS(Status) {
-		return VirtualAlloc(hProcess, Size, VirtualAddress);
-	}
-	return Status;
+	return NT_SUCCESS(Status) ? VirtualAlloc(hProcess, Size, VirtualAddress) : Status;
 }
 
-NTSTATUS VirtualFreeByProcessId(HANDLE ProcessId, PVOID VirtualAddress) {
+NTSTATUS VirtualFreeInProcess(HANDLE ProcessId, PVOID VirtualAddress) {
 	HANDLE hProcess;
 	NTSTATUS Status = OpenProcess(ProcessId, &hProcess);
-	if NT_SUCCESS(Status) {
-		return VirtualFree(hProcess, VirtualAddress);
-	}
-	return Status;
+	return NT_SUCCESS(Status) ? VirtualFree(hProcess, VirtualAddress) : Status;
 }
 
 

@@ -3,7 +3,7 @@
 PVOID GetMem(SIZE_T Bytes) {
 	if (Bytes == 0) return NULL;
 	PVOID Memory = ExAllocatePool(NonPagedPool, Bytes);
-	RtlSecureZeroMemory(Memory, Bytes);
+	if (Memory) RtlSecureZeroMemory(Memory, Bytes);
 	return Memory;
 }
 
@@ -68,17 +68,17 @@ BOOL ReadPhysicalMemory(PHYSICAL_ADDRESS PhysicalAddress, PVOID KernelBuffer, SI
 	if (VirtualAddress == NULL) return FALSE;
 
 	RtlCopyMemory(KernelBuffer, VirtualAddress, BufferSize);
+	
 	MmUnmapIoSpace(VirtualAddress, BufferSize);
 	return TRUE;
 }
 
 BOOL WritePhysicalMemory(PHYSICAL_ADDRESS PhysicalAddress, PVOID KernelBuffer, SIZE_T BufferSize) {
 	PVOID VirtualAddress = MmMapIoSpace(PhysicalAddress, BufferSize, MmNonCached);
-	DbgPrint("Virtual address = 0x%X", VirtualAddress);
 	if (VirtualAddress == NULL) return FALSE;
 
 	RtlCopyMemory(VirtualAddress, KernelBuffer, BufferSize);
-
+	
 	MmUnmapIoSpace(VirtualAddress, BufferSize);
 	return TRUE;
 }

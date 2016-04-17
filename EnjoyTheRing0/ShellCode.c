@@ -185,7 +185,7 @@ SHELL_STATUS ExecuteShell(
 		return SHELL_SAVING_FPU_STATE_ERROR;
 	}
 
-	// Отключаем SMEP и :
+	// Отключаем SMEP и защиту от записи:
 	GlobalDisableSmepSmap();
 	GlobalDisableWriteProtection();
 
@@ -215,7 +215,7 @@ SHELL_STATUS ExecuteShell(
 		Status = SHELL_RUNTIME_ERROR;
 	}
 
-	// Включаем SMEP:
+	// Включаем SMEP и защиту от записи:
 	GlobalEnableWriteProtection();
 	GlobalEnableSmepSmap();
 

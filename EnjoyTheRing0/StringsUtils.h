@@ -2,7 +2,7 @@
 
 #include "MemoryUtils.h"
 
-#define MAX_CHARS 2147483647 // Можно указывать в DestMaxCharacters
+#define MAX_CHARS 2147483647 // Максимальное значение DestMaxCharacters
 
 // DestMaxCharacters и MaxCharacters - размер буфера в СИМВОЛАХ с учётом символа для нуль-терминатора
 
@@ -18,10 +18,6 @@ NTSTATUS SafeStrLenW(LPWSTR String, SIZE_T MaxCharacters, PSIZE_T Length);
 // Длина строки в символах без нуль-терминатора:
 SIZE_T LengthA(LPSTR  Str);
 SIZE_T LengthW(LPWSTR Str);
-
-VOID WideToAnsi(LPWSTR SrcWide, OUT LPSTR DestAnsi);
-
-VOID DbgPrintW(LPWSTR DebugString);
 
 // Выделение памяти и конкатенация строк, возвращает количество символов в итоговой строке БЕЗ нуль-терминатора;
 // память необходимо освобождать с помощью FreeString:

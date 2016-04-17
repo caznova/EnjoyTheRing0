@@ -8,8 +8,8 @@
 NTSTATUS __fastcall DispatchIOCTL(IN PIOCTL_INFO RequestInfo, OUT PULONG ResponseLength) {
 	NTSTATUS Status = STATUS_SUCCESS;
 
-#define INPUT(Type)  ((Type)RequestInfo->InputBuffer) 
-#define OUTPUT(Type) ((Type)RequestInfo->OutputBuffer)
+#define INPUT(Type)  ((Type)(RequestInfo->InputBuffer)) 
+#define OUTPUT(Type) ((Type)(RequestInfo->OutputBuffer))
 #define SET_RESPONSE_LENGTH(Length) if (ResponseLength != NULL) {*ResponseLength = (Length);}
 
 	switch (RequestInfo->ControlCode) {
@@ -104,12 +104,12 @@ NTSTATUS __fastcall DispatchIOCTL(IN PIOCTL_INFO RequestInfo, OUT PULONG Respons
 // MemoryUtils:
 
 	case ALLOC_KERNEL_MEMORY:
-		*OUTPUT(PVOID*) = GetMem(*INPUT(PSIZE_T));
-		SET_RESPONSE_LENGTH(sizeof(PVOID));
+		*OUTPUT(PUINT64) = (SIZE_T)GetMem(*INPUT(PSIZE_T));
+		SET_RESPONSE_LENGTH(sizeof(UINT64));
 		break;
 
 	case FREE_KERNEL_MEMORY:
-		FreeMem(*INPUT(PVOID*));
+		FreeMem((PVOID)*INPUT(PUINT64));
 		break;
 
 	case COPY_MEMORY:
@@ -129,15 +129,15 @@ NTSTATUS __fastcall DispatchIOCTL(IN PIOCTL_INFO RequestInfo, OUT PULONG Respons
 		break;
 
 	case ALLOC_PHYSICAL_MEMORY:
-		*OUTPUT(PVOID*) = AllocPhysicalMemory(
+		*OUTPUT(PUINT64) = (SIZE_T)AllocPhysicalMemory(
 			INPUT(PALLOC_PHYSICAL_MEMORY_INPUT)->PhysicalAddress,
 			(SIZE_T)INPUT(PALLOC_PHYSICAL_MEMORY_INPUT)->Size
 		);
-		SET_RESPONSE_LENGTH(sizeof(PVOID));
+		SET_RESPONSE_LENGTH(sizeof(UINT64));
 		break;
 
 	case FREE_PHYSICAL_MEMORY:
-		FreePhysicalMemory(*INPUT(PVOID*));
+		FreePhysicalMemory((PVOID)*INPUT(PUINT64));
 		break;
 
 	case GET_PHYSICAL_ADDRESS:
@@ -167,7 +167,7 @@ NTSTATUS __fastcall DispatchIOCTL(IN PIOCTL_INFO RequestInfo, OUT PULONG Respons
 		break;
 
 	case READ_DMI_MEMORY:
-		ReadDmiMemory(OUTPUT(PVOID), DMI_SIZE);
+		ReadDmiMemory((PVOID)*INPUT(PUINT64), DMI_SIZE);
 		SET_RESPONSE_LENGTH(DMI_SIZE);
 		break;
 
@@ -187,7 +187,7 @@ NTSTATUS __fastcall DispatchIOCTL(IN PIOCTL_INFO RequestInfo, OUT PULONG Respons
 // ProcessesUtils:
 
 	case ALLOC_VIRTUAL_MEMORY:
-		OUTPUT(PALLOC_VIRTUAL_MEMORY_OUTPUT)->Status = VirtualAllocByProcessId(
+		OUTPUT(PALLOC_VIRTUAL_MEMORY_OUTPUT)->Status = VirtualAllocInProcess(
 			(HANDLE)INPUT(PALLOC_VIRTUAL_MEMORY_INPUT)->ProcessId,
 			(SIZE_T)INPUT(PALLOC_VIRTUAL_MEMORY_INPUT)->Size,
 			(PVOID*)&OUTPUT(PALLOC_VIRTUAL_MEMORY_OUTPUT)->VirtualAddress
@@ -196,7 +196,7 @@ NTSTATUS __fastcall DispatchIOCTL(IN PIOCTL_INFO RequestInfo, OUT PULONG Respons
 		break;
 
 	case FREE_VIRTUAL_MEMORY:
-		*OUTPUT(PNTSTATUS) = VirtualFreeByProcessId(
+		*OUTPUT(PNTSTATUS) = VirtualFreeInProcess(
 			(HANDLE)INPUT(PFREE_VIRTUAL_MEMORY_INPUT)->ProcessId,
 			(PVOID)INPUT(PFREE_VIRTUAL_MEMORY_INPUT)->VirtualAddress
 		);

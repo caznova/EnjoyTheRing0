@@ -48,27 +48,6 @@ SIZE_T LengthW(LPWSTR Str) {
 	return Length;
 }
 
-VOID WideToAnsi(LPWSTR SrcWide, OUT LPSTR DestAnsi) {
-	SIZE_T WideLength = 0;
-	SafeStrLenW(SrcWide, NTSTRSAFE_MAX_CCH, &WideLength);
-
-	if (WideLength == 0) return;
-
-	for (ULONG i = 0; i < WideLength; i++) {
-		*((PBYTE)DestAnsi + i) = *((PBYTE)(SrcWide) + (i * 2));
-	}
-	*((PBYTE)DestAnsi + WideLength) = 0; // Нуль-терминатор
-}
-
-VOID DbgPrintW(LPWSTR DebugString) {
-	SIZE_T WideLength = 0;
-	SafeStrLenW(DebugString, NTSTRSAFE_MAX_CCH, &WideLength);
-	LPSTR AnsiString = AllocAnsiString(WideLength, TRUE, NULL);
-	WideToAnsi(DebugString, AnsiString);
-	DbgPrint(AnsiString);
-	FreeMem(AnsiString);
-}
-
 SIZE_T ConcatenateStringsA(LPSTR SrcString, LPSTR ConcatenateWith, OUT LPSTR* ResultString) {
 	SIZE_T SrcStringLength = LengthA(SrcString);
 	SIZE_T ConcatenateWithLength = LengthA(ConcatenateWith);
